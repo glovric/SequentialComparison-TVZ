@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+yfinance
+torch
+plotly
+scikit-learn
+nbformat
+tensorboard
+tqdm
