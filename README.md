@@ -1,0 +1,2 @@
+# SequentialComparison-TVZ
+Master thesis
