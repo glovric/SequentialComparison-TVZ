@@ -39,20 +39,37 @@ if page == "📈 AAPL Stock Dashboard":
     df = load_data()
     df = add_financial_features(df)
     available_columns = df.columns.tolist()
+    basic_features = available_columns[:5]
+    derived_features = available_columns[5:]
 
     # --- Multi-feature Histograms ---
-    st.subheader("📊 Multiple Histograms")
+    st.subheader("Histograms")
 
-    selected_hist_features = st.multiselect(
-        "Select features to plot histograms", available_columns, default=["Daily Return"]
-    )
     col1, col2 = st.columns(2)
+
     with col1:
-        bins = st.slider("Number of bins", min_value=5, max_value=100, value=30, step=5)
+        basic_selected = st.multiselect(
+            "Basic features",
+            basic_features,
+            default=["Low"]
+        )
+
     with col2:
-        hist_color = st.color_picker("Pick a histogram color", "#636EFA")
+        derived_selected = st.multiselect(
+            "Derived features",
+            derived_features,
+            default=["Daily Return"]
+        )
+
+    selected_hist_features = basic_selected + derived_selected
 
     if selected_hist_features:
+
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            bins = st.slider("Number of bins", min_value=5, max_value=100, value=30, step=5)
+        with col2:
+            hist_color = st.color_picker("Pick a histogram color", "#636EFA")
 
         hist_cols = st.columns(2)
         for i, feature in enumerate(selected_hist_features):
@@ -77,14 +94,17 @@ if page == "📈 AAPL Stock Dashboard":
                 hist_cols = st.columns(2)
 
     # --- Multi-feature Box and Whisker Plots ---
-    st.subheader("📦 Multiple Box and Whisker Plots")
+    st.subheader("Box and Whisker Plots")
 
-    selected_box_features = st.multiselect(
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        selected_box_features = st.multiselect(
         "Select features to plot box plots", available_columns, default=["Close"]
     )
-    box_color = st.color_picker("Pick a box plot color", "#EF553B")
 
     if selected_box_features:
+        with col2:
+            box_color = st.color_picker("Pick a box plot color", "#EF553B")
         box_cols = st.columns(2)
         for i, feature in enumerate(selected_box_features):
             col = box_cols[i % 2]
@@ -98,48 +118,56 @@ if page == "📈 AAPL Stock Dashboard":
                 box_cols = st.columns(2)
 
     # --- Multi-feature Line Charts ---
-    st.subheader("📈 Multiple Line Charts")
+    st.subheader("Line Charts")
 
-    selected_line_features = st.multiselect(
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        selected_line_features = st.multiselect(
         "Select features to plot line charts", available_columns, default=["Close", "SMA 14"]
     )
 
     if selected_line_features:
+        with col2:
+            line_color = st.color_picker("Pick a line plot color", "#EF553B")
         line_cols = st.columns(2)
         for i, feature in enumerate(selected_line_features):
             col = line_cols[i % 2]
             with col:
-                color = st.color_picker(f"Pick a color for {feature}", "#00CC96", key=f"line_color_{feature}")
                 fig = px.line(
                     df, x=df.index, y=feature, title=f"Line Chart of {feature}",
-                    template="plotly_white", color_discrete_sequence=[color]
+                    template="plotly_white", color_discrete_sequence=[line_color]
                 )
                 st.plotly_chart(fig, use_container_width=True)
             if (i + 1) % 2 == 0:
                 line_cols = st.columns(2)
 
     # --- Candlestick Chart ---
-    st.subheader("🕯️ Candlestick Chart")
+    st.subheader("Candlestick Chart")
+    show_candlestick = st.checkbox("Show Candlestick Chart", value=True)
 
-    fig_candle = go.Figure(data=[
-        go.Candlestick(x=df.index,
-                       open=df['Open'],
-                       high=df['High'],
-                       low=df['Low'],
-                       close=df['Close'],
-                       increasing_line_color='green',
-                       decreasing_line_color='red')
-    ])
+    if show_candlestick:
 
-    fig_candle.update_layout(
-        title="AAPL Candlestick Chart",
-        xaxis_title="Date",
-        yaxis_title="Price (USD)",
-        xaxis_rangeslider_visible=False,
-        template="plotly_white"
-    )
+        fig_candle = go.Figure(data=[
+            go.Candlestick(
+                x=df.index,
+                open=df['Open'],
+                high=df['High'],
+                low=df['Low'],
+                close=df['Close'],
+                increasing_line_color='green',
+                decreasing_line_color='red'
+            )
+        ])
 
-    st.plotly_chart(fig_candle, use_container_width=True)
+        fig_candle.update_layout(
+            title="AAPL Candlestick Chart",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            xaxis_rangeslider_visible=False,
+            template="plotly_white"
+        )
+
+        st.plotly_chart(fig_candle, use_container_width=True)
 
     # --- Data Summary ---
     st.subheader("🧮 Data Summary")
