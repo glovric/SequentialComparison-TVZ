@@ -3,7 +3,15 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import plotly.express as px
-import plotly.graph_objects as go
+from streamlit_utils import *
+from utils import add_financial_features
+
+@st.cache_data
+def load_data():
+    df = yf.download('AAPL')
+    df.columns = df.columns.droplevel(1) if isinstance(df.columns, pd.MultiIndex) else df.columns
+    df = add_financial_features(df)
+    return df
 
 st.set_page_config(page_title="Stock Dashboard + LSTM Showcase", layout="wide")
 
@@ -11,171 +19,35 @@ st.set_page_config(page_title="Stock Dashboard + LSTM Showcase", layout="wide")
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["📈 AAPL Stock Dashboard", "🤖 LSTM Model Showcase"])
 
-# --- Shared Functions ---
-@st.cache_data
-def load_data():
-    df = yf.download('AAPL')
-    df.columns = df.columns.droplevel(1) if isinstance(df.columns, pd.MultiIndex) else df.columns
-    return df
-
-def add_financial_features(df: pd.DataFrame, window: int = 14) -> pd.DataFrame:
-    df["Daily Return"] = (df["Close"] - df["Open"]) / df["Open"]
-    close_pct_change = df['Close'].pct_change()
-    df['Lagged Return'] = close_pct_change.shift(1).fillna(0)
-    df['Log Return'] = np.log(df['Close'] / df['Close'].shift(1)).fillna(0)
-    df[f"SMA {window}"] = df["Close"].rolling(window=window).mean().fillna(0)
-    df["Prev_Close"] = df['Close'].shift(1).fillna(0)
-    true_range = df[['High', 'Low', 'Prev_Close']].apply(
-        lambda x: max(x["High"] - x["Low"], abs(x["High"] - x["Prev_Close"]), abs(x["Low"] - x["Prev_Close"])), axis=1)
-    df[f'ATR {window}'] = true_range.rolling(window=window).mean().fillna(0)
-    df.drop(["Prev_Close"], axis=1, inplace=True)
-    return df
-
 # --- Page 1: AAPL Dashboard ---
 
 if page == "📈 AAPL Stock Dashboard":
 
     st.title("📊 AAPL Stock Data Dashboard")
+
     df = load_data()
-    df = add_financial_features(df)
+
     available_columns = df.columns.tolist()
     basic_features = available_columns[:5]
     derived_features = available_columns[5:]
 
-    # --- Multi-feature Histograms ---
+    # --- Data Summary ---
+    st.subheader("🧮 Data Summary")
+    render_data_summary(df)
+
     st.subheader("Histograms")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        basic_selected = st.multiselect(
-            "Basic features",
-            basic_features,
-            default=["Low"]
-        )
-
-    with col2:
-        derived_selected = st.multiselect(
-            "Derived features",
-            derived_features,
-            default=["Daily Return"]
-        )
-
-    selected_hist_features = basic_selected + derived_selected
-
-    if selected_hist_features:
-
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            bins = st.slider("Number of bins", min_value=5, max_value=100, value=30, step=5)
-        with col2:
-            hist_color = st.color_picker("Pick a histogram color", "#636EFA")
-
-        hist_cols = st.columns(2)
-        for i, feature in enumerate(selected_hist_features):
-            col = hist_cols[i % 2]
-            with col:
-                fig = go.Figure()
-                fig.add_trace(go.Histogram(
-                    x=df[feature],
-                    nbinsx=bins,
-                    marker=dict(
-                        color=hist_color,
-                        line=dict(color='rgb(0, 0, 0)', width=0.3)
-                    ),
-                    name=feature
-                ))
-                fig.update_layout(
-                    title=f"Histogram of {feature}",
-                    template="plotly_white"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                hist_cols = st.columns(2)
-
-    # --- Multi-feature Box and Whisker Plots ---
+    render_histograms(df, basic_features, derived_features)
+    
     st.subheader("Box and Whisker Plots")
-
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        selected_box_features = st.multiselect(
-        "Select features to plot box plots", available_columns, default=["Close"]
-    )
-
-    if selected_box_features:
-        with col2:
-            box_color = st.color_picker("Pick a box plot color", "#EF553B")
-        box_cols = st.columns(2)
-        for i, feature in enumerate(selected_box_features):
-            col = box_cols[i % 2]
-            with col:
-                fig = px.box(
-                    df, y=feature, title=f"Box Plot of {feature}",
-                    template="plotly_white", color_discrete_sequence=[box_color], points="outliers"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                box_cols = st.columns(2)
+    render_box_whiskers(df, basic_features, derived_features)
 
     # --- Multi-feature Line Charts ---
     st.subheader("Line Charts")
-
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        selected_line_features = st.multiselect(
-        "Select features to plot line charts", available_columns, default=["Close", "SMA 14"]
-    )
-
-    if selected_line_features:
-        with col2:
-            line_color = st.color_picker("Pick a line plot color", "#EF553B")
-        line_cols = st.columns(2)
-        for i, feature in enumerate(selected_line_features):
-            col = line_cols[i % 2]
-            with col:
-                fig = px.line(
-                    df, x=df.index, y=feature, title=f"Line Chart of {feature}",
-                    template="plotly_white", color_discrete_sequence=[line_color]
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                line_cols = st.columns(2)
+    render_line(df, basic_features, derived_features)
 
     # --- Candlestick Chart ---
     st.subheader("Candlestick Chart")
-    show_candlestick = st.checkbox("Show Candlestick Chart", value=True)
-
-    if show_candlestick:
-
-        fig_candle = go.Figure(data=[
-            go.Candlestick(
-                x=df.index,
-                open=df['Open'],
-                high=df['High'],
-                low=df['Low'],
-                close=df['Close'],
-                increasing_line_color='green',
-                decreasing_line_color='red'
-            )
-        ])
-
-        fig_candle.update_layout(
-            title="AAPL Candlestick Chart",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            xaxis_rangeslider_visible=False,
-            template="plotly_white"
-        )
-
-        st.plotly_chart(fig_candle, use_container_width=True)
-
-    # --- Data Summary ---
-    st.subheader("🧮 Data Summary")
-    with st.expander("Show raw data"):
-        st.write(df.tail())
-    st.write("📐 DataFrame shape:", df.shape)
-    st.write("📊 Descriptive statistics:")
-    st.write(df.describe())
+    render_candlestick(df)
 
 
 # --- Page 2: LSTM Model Showcase ---
