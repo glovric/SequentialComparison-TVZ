@@ -1,6 +1,9 @@
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
+from utils import get_financial_data
+from torch_utils import load_lstm_model, load_showcase_data
+import joblib
 
 def render_histograms(df, basic_features, derived_features):
 
@@ -166,3 +169,97 @@ def render_data_summary(df):
     st.write("📐 DataFrame shape:", df.shape)
     st.write("📊 Descriptive statistics:")
     st.write(df.describe())
+
+def render_lstm_train(df, model, X_train_seq, y_train_seq):
+    
+    scaler = joblib.load('scalers/standard_scaler.save')
+
+    y_true = scaler.inverse_transform(y_train_seq.cpu().detach().numpy())
+    y_pred = model(X_train_seq).cpu().detach().numpy()
+    y_pred = scaler.inverse_transform(y_pred)
+
+    train_dates = df.index[:len(X_train_seq)]
+
+    line_color_true = '#1f77b4'
+    line_color_pred = '#ff7f0e'
+    line_cols = st.columns(5)
+
+    for i, feature in enumerate(df.columns):
+        col = line_cols[i % 5]
+        
+        with col:
+            idx = df.columns.get_loc(feature)  # get index of the feature in df
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(
+                x=df.index, y=y_true[:, idx],
+                mode='lines', name='True', line=dict(color=line_color_true)
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=df.index, y=y_pred[:, idx],
+                mode='lines', name='Predicted', line=dict(color=line_color_pred)
+            ))
+
+            fig.update_layout(
+                title=f"Train results for {feature}",
+                template="plotly_white",
+                legend=dict(x=0.01, y=0.99),
+                margin=dict(t=40, b=20)
+            )
+
+            fig.update_xaxes(tickformat="%Y-%m")
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Regenerate new columns every 2 plots
+        if (i + 1) % 5 == 0:
+            line_cols = st.columns(5)
+
+def render_lstm_test(df, model, X_test_seq, y_test_seq):
+    
+    scaler = joblib.load('scalers/standard_scaler.save')
+
+    y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
+    y_pred = model(X_test_seq).cpu().detach().numpy()
+    y_pred = scaler.inverse_transform(y_pred)
+
+    test_dates = df.index[-len(X_test_seq):]
+
+    line_color_true = '#1f77b4'
+    line_color_pred = '#ff7f0e'
+    line_cols = st.columns(5)
+
+    for i, feature in enumerate(df.columns):
+        col = line_cols[i % 5]
+        
+        with col:
+            idx = df.columns.get_loc(feature)  # get index of the feature in df
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(
+                x=test_dates, y=y_true[:, idx],
+                mode='lines', name='True', line=dict(color=line_color_true)
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=test_dates, y=y_pred[:, idx],
+                mode='lines', name='Predicted', line=dict(color=line_color_pred)
+            ))
+
+            fig.update_layout(
+                title=f"Train results for {feature}",
+                template="plotly_white",
+                legend=dict(x=0.01, y=0.99),
+                margin=dict(t=40, b=20)
+            )
+
+            fig.update_xaxes(tickformat="%Y-%m")
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Regenerate new columns every 2 plots
+        if (i + 1) % 5 == 0:
+            line_cols = st.columns(5)
