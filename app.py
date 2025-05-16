@@ -103,7 +103,7 @@ elif page == "🤖 LSTM Model Showcase":
             ))
 
             fig.update_layout(
-                title=f"Line Chart of {feature}",
+                title=f"Train results for {feature}",
                 template="plotly_white",
                 legend=dict(x=0.01, y=0.99),
                 margin=dict(t=40, b=20)
@@ -116,3 +116,46 @@ elif page == "🤖 LSTM Model Showcase":
         # Regenerate new columns every 2 plots
         if (i + 1) % 5 == 0:
             line_cols = st.columns(5)
+
+    y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
+    y_pred = lstm_model(X_test_seq).cpu().detach().numpy()
+    y_pred = scaler.inverse_transform(y_pred)
+    line_cols = st.columns(5)
+
+    for i, feature in enumerate(df.columns):
+        col = line_cols[i % 5]
+        
+        with col:
+            idx = df.columns.get_loc(feature)  # get index of the feature in df
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(
+                x=df.index, y=y_true[:, idx],
+                mode='lines', name='True', line=dict(color=line_color_true)
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=df.index, y=y_pred[:, idx],
+                mode='lines', name='Predicted', line=dict(color=line_color_pred)
+            ))
+
+            fig.update_layout(
+                title=f"Train results for {feature}",
+                template="plotly_white",
+                legend=dict(x=0.01, y=0.99),
+                margin=dict(t=40, b=20)
+            )
+
+            fig.update_xaxes(tickformat="%Y-%m")
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Regenerate new columns every 2 plots
+        if (i + 1) % 5 == 0:
+            line_cols = st.columns(5)
+
+    df_pred = pd.DataFrame({"Time": df.index[-len(y_true):], "Actual": y_true[:, 0], "Predicted": y_pred[:, 0]})
+    fig_lstm = px.line(df_pred, x="Time", y=["Actual", "Predicted"], title="Sample LSTM Output (Mock Data)",
+                       labels={"value": "Price", "Time": "Time Step"}, template="plotly_white")
+    st.plotly_chart(fig_lstm, use_container_width=True)
