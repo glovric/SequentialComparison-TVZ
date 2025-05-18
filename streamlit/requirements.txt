@@ -7,3 +7,4 @@ torch==2.1.0+cpu
 plotly
 scikit-learn
 nbformat
+streamlit

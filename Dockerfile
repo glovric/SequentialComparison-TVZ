@@ -8,7 +8,10 @@ COPY streamlit/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your project code
-COPY . .
+COPY streamlit/ streamlit/
+COPY utils/ utils/
+COPY models/ models/
+COPY scalers/ scalers/
 
 # Expose port if needed (e.g., for Streamlit)
 EXPOSE 8501
