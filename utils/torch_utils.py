@@ -1,10 +1,9 @@
 from torch.utils.data import Dataset
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import torch
 import joblib
-from utils import create_sequence
+from utils.utils import create_sequence
 
 class StockDataset(Dataset):
 

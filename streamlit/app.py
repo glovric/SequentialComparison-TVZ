@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import streamlit as st
 import pandas as pd
 import yfinance as yf
 from streamlit_utils import *
-from utils import add_financial_features
-from torch_utils import *
+from utils.utils import add_financial_features
+from utils.torch_utils import *
 import joblib
 
 @st.cache_data

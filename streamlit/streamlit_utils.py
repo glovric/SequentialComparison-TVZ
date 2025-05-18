@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
-from torch_utils import load_custom_test_data
+from utils.torch_utils import load_custom_test_data
 import joblib
 import pandas as pd
 import numpy as np
