@@ -185,14 +185,16 @@ def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, deriv
         basic_selected_line = st.multiselect(
             "Select basic features to plot true vs. predicted",
             basic_features,
-            default=["Low"]
+            default=["Low"],
+            key="basic_features_train"
         )
 
     with col2:
         derived_selected_line = st.multiselect(
             "Select derived features to plot true vs. predicted",
             derived_features,
-            default=["Daily Return"]
+            default=["Daily Return"],
+            key="derived_features_train"            
         )
 
     selected_line_features = basic_selected_line + derived_selected_line
@@ -200,11 +202,11 @@ def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, deriv
     if selected_line_features:
 
         with col3:
-            num_columns = st.number_input("Number of columns train:", min_value=1, max_value=5, step=1, value=2)
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_train")
         with col4:
-            line_color_true = st.color_picker("Line color for true", "#1f77b4")
+            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_train")
         with col5:
-            line_color_pred = st.color_picker("Line color for predicted", "#ff7f0e")
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train")
 
         line_cols = st.columns(num_columns)
 
@@ -249,37 +251,39 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
 
     with col1:
         basic_selected_line = st.multiselect(
-            "Select basic test features to plot true vs. predicted",
+            "Select basic features to plot true vs. predicted",
             basic_features,
-            default=["Low"]
+            default=["Low"],
+            key="basic_features_test"
         )
 
     with col2:
         derived_selected_line = st.multiselect(
-            "Select derived test features to plot true vs. predicted",
+            "Select derived features to plot true vs. predicted",
             derived_features,
-            default=["Daily Return"]
+            default=["Daily Return"],
+            key="derived_features_test"
         )
-    with col6:
-        num_int = st.number_input("Enter an integer:", min_value=1, max_value=100, step=1, value=10)
-        X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, seq_len=num_int)
-        y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
-        y_pred = model(X_test_seq).cpu().detach().numpy()
-        y_pred = scaler.inverse_transform(y_pred)
-        test_dates = df.index[-len(X_test_seq):]
-
-    st.write(f"Test results for sequence length {num_int}, shapes: {X_test_seq.shape} | {y_test_seq.shape}")
-
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
 
         with col3:
-            num_columns = st.number_input("Number of columns test:", min_value=1, max_value=5, step=1, value=2)
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_test")
         with col4:
-            line_color_true = st.color_picker("Line color for true test", "#1f77b4")
+            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_test")
         with col5:
-            line_color_pred = st.color_picker("Line color for predicted test", "#ff7f0e")
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
+        with col6:
+            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10)
+            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, seq_len=num_int)
+            y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
+            y_pred = model(X_test_seq).cpu().detach().numpy()
+            y_pred = scaler.inverse_transform(y_pred)
+            test_dates = df.index[-len(X_test_seq):]
+
+        st.write(f"Showing test results for sequence length {num_int}, data shape: {tuple(X_test_seq.shape)}")
+
 
         line_cols = st.columns(num_columns)
 
@@ -288,7 +292,7 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
             col = line_cols[i % num_columns]
 
             with col:
-                idx = df.columns.get_loc(feature)  # get index of the feature in df
+                idx = df.columns.get_loc(feature)
 
                 fig = go.Figure()
 
@@ -303,7 +307,7 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
                 ))
 
                 fig.update_layout(
-                    title=f"Train results for {feature}",
+                    title=f"Test results for {feature}",
                     template="plotly_white",
                     legend=dict(x=0.01, y=0.99),
                     margin=dict(t=40, b=20)

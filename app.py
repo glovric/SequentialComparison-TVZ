@@ -65,7 +65,8 @@ elif page == "🤖 LSTM Model Showcase":
     lstm_model = load_lstm_model()
     scaler = joblib.load('scalers/standard_scaler.save')
 
+    st.subheader("LSTM many-to-one Training Results")
     render_lstm_train(df_models, lstm_model, X_train, y_train, basic_features, derived_features)
 
-    st.subheader("LSTM Test Data")
-    render_lstm_test(df, lstm_model, X_test_scaled, basic_features, derived_features)
+    st.subheader("LSTM many-to-one Test Results")
+    render_lstm_test(df_models, lstm_model, X_test_scaled, basic_features, derived_features)
