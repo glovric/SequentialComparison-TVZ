@@ -4,6 +4,7 @@ import plotly.express as px
 from torch_utils import load_custom_test_data
 import joblib
 import pandas as pd
+import numpy as np
 
 def render_histograms(df, basic_features, derived_features):
 
@@ -320,15 +321,100 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
-def render_lstm_test2(df, y_true, y_pred):
-    for idx, c in enumerate(df.columns[:5]):
-        df_pred = pd.DataFrame({"Time": df.index[-len(y_true):], "Actual": y_true[:, idx], "Predicted": y_pred[:, idx]})
-        fig_lstm = px.line(df_pred, x="Time", y=["Actual", "Predicted"], title=f"Test result for {c}",
-                        labels={"value": "Price", "Time": "Time Step"}, template="plotly_white")
-        st.plotly_chart(fig_lstm, use_container_width=True)
+def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
+    scaler = joblib.load('scalers/standard_scaler.save')
+    rand_idx = np.random.randint(0, len(X_train_seq))
 
-    """for idx, c in enumerate(df.columns[5:], start=5):
-        df_pred = pd.DataFrame({"Time": df.index[-len(y_true):], "Actual": y_true[:, idx], "Predicted": y_pred[:, idx]})
-        fig_lstm = px.line(df_pred, x="Time", y=["Actual", "Predicted"], title=f"Test result for {c}",
-                        labels={"value": "Price", "Time": "Time Step"}, template="plotly_white")
-        st.plotly_chart(fig_lstm, use_container_width=True)"""
+    x = X_train_seq[rand_idx].cpu().detach().numpy()
+    y_true = y_train_seq[rand_idx].cpu().detach().numpy()
+    y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
+
+    x = scaler.inverse_transform(x)
+    y_true = scaler.inverse_transform(y_true)
+    y_pred = scaler.inverse_transform(y_pred)
+
+
+    col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 1])
+
+    with col1:
+        basic_selected_line = st.multiselect(
+            "Select basic features to plot true vs. predicted",
+            basic_features,
+            default=["Low"],
+            key="basic_features_train_multiple"
+        )
+
+    with col2:
+        derived_selected_line = st.multiselect(
+            "Select derived features to plot true vs. predicted",
+            derived_features,
+            default=["Daily Return"],
+            key="derived_features_train_multiple"            
+        )
+
+    selected_line_features = basic_selected_line + derived_selected_line
+
+    if selected_line_features:
+
+        with col3:
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_train_multiple")
+        with col4:
+            line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_train_multiple")
+        with col5:
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train_multiple")
+
+        line_cols = st.columns(num_columns)
+
+        for i, feature in enumerate(selected_line_features):
+            col = line_cols[i % num_columns]
+
+            with col:
+                idx = df.columns.get_loc(feature)  # Get index of feature
+
+                input_seq = x[:, idx]
+                true_seq = y_true[:, idx]
+                pred_seq = y_pred[:, idx]
+
+                # Construct x-axis ranges for each segment
+                input_range = list(range(len(input_seq) + 1))
+                true_range = list(range(len(input_seq), len(input_seq) + len(true_seq)))
+                pred_range = list(range(len(input_seq), len(input_seq) + len(pred_seq)))
+
+                fig = go.Figure()
+
+                fig.add_trace(go.Scatter(
+                    x=input_range,
+                    y=np.hstack((input_seq, true_seq[0])),
+                    mode='lines',
+                    name='Input',
+                    line=dict(color='#1f77b4')
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=true_range,
+                    y=true_seq,
+                    mode='lines',
+                    name='True',
+                    line=dict(color=line_color_true)
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=pred_range,
+                    y=pred_seq,
+                    mode='lines',
+                    name='Predicted',
+                    line=dict(color=line_color_pred, dash='dash')
+                ))
+
+                fig.update_layout(
+                    title=f"Train results for {feature}",
+                    template="plotly_white",
+                    legend=dict(x=0.01, y=0.99),
+                    margin=dict(t=40, b=20),
+                    height=300
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+            if (i + 1) % num_columns == 0:
+                line_cols = st.columns(num_columns)

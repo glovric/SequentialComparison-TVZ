@@ -28,7 +28,7 @@ page = st.sidebar.radio("Go to", ["📈 AAPL Stock Dashboard", "🤖 LSTM Model 
 # --- Load data ---
 df = load_data()
 df_models = df[df.index >= '2015-01-01']
-X_train, y_train, X_test_scaled = load_model_train_data(df_models)
+X_train, y_train, y_train_multiple, X_test_scaled = load_model_train_data(df_models)
 available_columns = df.columns.tolist()
 basic_features = available_columns[:5]
 derived_features = available_columns[5:]
@@ -63,6 +63,7 @@ elif page == "🤖 LSTM Model Showcase":
     st.title("🤖 LSTM Model Showcase")
 
     lstm_model = load_lstm_model()
+    lstm_model2 = load_lstm_model(predict_sequence=True)
     scaler = joblib.load('scalers/standard_scaler.save')
 
     st.subheader("LSTM many-to-one Training Results")
@@ -70,3 +71,6 @@ elif page == "🤖 LSTM Model Showcase":
 
     st.subheader("LSTM many-to-one Test Results")
     render_lstm_test(df_models, lstm_model, X_test_scaled, basic_features, derived_features)
+
+    st.subheader("LSTM many-to-many Training Results")
+    render_lstm_train2(df_models, lstm_model2, X_train, y_train_multiple, basic_features, derived_features)

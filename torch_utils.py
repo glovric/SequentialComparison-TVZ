@@ -44,11 +44,12 @@ def load_showcase_train_data(df):
     scaler = joblib.load('scalers/standard_scaler.save')
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    X_train_seq, y_train_seq = create_sequence(X_train_scaled, input_seq_len=10)
+    X_train, y_train = create_sequence(X_train_scaled, input_seq_len=10)
+    _, y_train_multiple = create_sequence(X_train_scaled, input_seq_len=10, target_seq_len=10)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    data = (X_train_seq, y_train_seq)
-    X_train_seq, y_train_seq = to_tensor_to_device(data, device)
-    return X_train_seq, y_train_seq, X_test_scaled
+    data = (X_train, y_train, y_train_multiple)
+    X_train, y_train, y_train_multiple = to_tensor_to_device(data, device)
+    return X_train, y_train, y_train_multiple, X_test_scaled
 
 def load_custom_test_data(X_test_scaled, seq_len=10):
     X_test_seq, y_test_seq = create_sequence(X_test_scaled, input_seq_len=seq_len)
