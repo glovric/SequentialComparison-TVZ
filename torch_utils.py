@@ -31,20 +31,31 @@ class StockDataset(Dataset):
         sample = self.data[idx]
         target = self.targets[idx]
         return sample, target
-    
-def load_showcase_data(df, start_date: str = "2015-01-01"):
-    df = df[df.index >= start_date] # Select rows starting at start_date
+
+def to_tensor_to_device(data, device):
+    return tuple(
+        (item if isinstance(item, torch.Tensor) else torch.Tensor(item)).to(device)
+        for item in data
+    )
+
+def load_showcase_train_data(df):
     X = df.to_numpy()
     X_train, X_test = train_test_split(X, test_size=0.2, shuffle=False)
     scaler = joblib.load('scalers/standard_scaler.save')
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     X_train_seq, y_train_seq = create_sequence(X_train_scaled, input_seq_len=10)
-    X_test_seq, y_test_seq = create_sequence(X_test_scaled, input_seq_len=7)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    X_train_seq, X_test_seq, y_train_seq, y_test_seq = torch.Tensor(X_train_seq), torch.Tensor(X_test_seq), torch.Tensor(y_train_seq), torch.Tensor(y_test_seq)
-    X_train_seq, X_test_seq, y_train_seq, y_test_seq = X_train_seq.to(device), X_test_seq.to(device), y_train_seq.to(device), y_test_seq.to(device)
-    return X_train_seq, X_test_seq, y_train_seq, y_test_seq
+    data = (X_train_seq, y_train_seq)
+    X_train_seq, y_train_seq = to_tensor_to_device(data, device)
+    return X_train_seq, y_train_seq, X_test_scaled
+
+def load_custom_test_data(X_test_scaled, seq_len=10):
+    X_test_seq, y_test_seq = create_sequence(X_test_scaled, input_seq_len=seq_len)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    data = (X_test_seq, y_test_seq)
+    X_test_seq, y_test_seq = to_tensor_to_device(data, device)
+    return X_test_seq, y_test_seq
 
 def load_lstm_model(predict_sequence=False):
     n_features = 10
