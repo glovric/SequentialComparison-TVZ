@@ -276,8 +276,8 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
         with col5:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
         with col6:
-            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10)
-            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, seq_len=num_int)
+            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int")
+            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
             y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
             y_pred = model(X_test_seq).cpu().detach().numpy()
             y_pred = scaler.inverse_transform(y_pred)
@@ -323,7 +323,15 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
 
 def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
     scaler = joblib.load('scalers/standard_scaler.save')
-    rand_idx = np.random.randint(0, len(X_train_seq))
+    
+    # Ensure rand_idx persists
+    if 'rand_idx_train' not in st.session_state:
+        st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
+
+    if st.button("Load new random train sequence"):
+        st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
+
+    rand_idx = st.session_state.rand_idx_train
 
     x = X_train_seq[rand_idx].cpu().detach().numpy()
     y_true = y_train_seq[rand_idx].cpu().detach().numpy()
@@ -362,6 +370,118 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
             line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_train_multiple")
         with col5:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train_multiple")
+
+        line_cols = st.columns(num_columns)
+
+        for i, feature in enumerate(selected_line_features):
+            col = line_cols[i % num_columns]
+
+            with col:
+                idx = df.columns.get_loc(feature)  # Get index of feature
+
+                input_seq = x[:, idx]
+                true_seq = y_true[:, idx]
+                pred_seq = y_pred[:, idx]
+
+                # Construct x-axis ranges for each segment
+                input_range = list(range(len(input_seq) + 1))
+                true_range = list(range(len(input_seq), len(input_seq) + len(true_seq)))
+                pred_range = list(range(len(input_seq), len(input_seq) + len(pred_seq)))
+
+                fig = go.Figure()
+
+                fig.add_trace(go.Scatter(
+                    x=input_range,
+                    y=np.hstack((input_seq, true_seq[0])),
+                    mode='lines',
+                    name='Input',
+                    line=dict(color='#1f77b4')
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=true_range,
+                    y=true_seq,
+                    mode='lines',
+                    name='True',
+                    line=dict(color=line_color_true)
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=pred_range,
+                    y=pred_seq,
+                    mode='lines',
+                    name='Predicted',
+                    line=dict(color=line_color_pred, dash='dash')
+                ))
+
+                fig.update_layout(
+                    title=f"Train results for {feature}",
+                    template="plotly_white",
+                    legend=dict(x=0.01, y=0.99),
+                    margin=dict(t=40, b=20),
+                    height=300
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+            if (i + 1) % num_columns == 0:
+                line_cols = st.columns(num_columns)
+
+def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features):
+    
+    scaler = joblib.load('scalers/standard_scaler.save')
+
+    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 1, 1, 1, 1])
+
+    with col1:
+        basic_selected_line = st.multiselect(
+            "Select basic features to plot true vs. predicted",
+            basic_features,
+            default=["Low"],
+            key="basic_features_test_multiple"
+        )
+
+    with col2:
+        derived_selected_line = st.multiselect(
+            "Select derived features to plot true vs. predicted",
+            derived_features,
+            default=["Daily Return"],
+            key="derived_features_test_multiple"
+        )
+    selected_line_features = basic_selected_line + derived_selected_line
+
+    if selected_line_features:
+
+        with col3:
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_test_multiple")
+        with col4:
+            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_test_multiple")
+        with col5:
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test_multiple")
+        with col6:
+            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int_multiple")
+            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
+            
+            # Ensure rand_idx persists
+            if 'rand_idx_test' not in st.session_state:
+                st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+
+            if st.button("Load new random test sequence"):
+                st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+
+            rand_idx = st.session_state.rand_idx_test
+
+            x = X_test_seq[rand_idx].cpu().detach().numpy()
+            y_true = y_test_seq[rand_idx].cpu().detach().numpy()
+            y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
+
+            x = scaler.inverse_transform(x)
+            y_true = scaler.inverse_transform(y_true)
+            y_pred = scaler.inverse_transform(y_pred)
+
+
+        st.write(f"Showing test results for sequence length {num_int}, data shape: {tuple(X_test_seq.shape)}, true: {y_true.shape}, pred: {y_pred.shape}")
+
 
         line_cols = st.columns(num_columns)
 
