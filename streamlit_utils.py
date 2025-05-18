@@ -328,9 +328,6 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
     if 'rand_idx_train' not in st.session_state:
         st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
 
-    if st.button("Load new random train sequence"):
-        st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
-
     rand_idx = st.session_state.rand_idx_train
 
     x = X_train_seq[rand_idx].cpu().detach().numpy()
@@ -340,7 +337,6 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
     x = scaler.inverse_transform(x)
     y_true = scaler.inverse_transform(y_true)
     y_pred = scaler.inverse_transform(y_pred)
-
 
     col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 1])
 
@@ -370,6 +366,9 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
             line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_train_multiple")
         with col5:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train_multiple")
+
+        if st.button("Load new random train sequence", key="button_rand_train"):
+            st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
 
         line_cols = st.columns(num_columns)
 
@@ -455,18 +454,15 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
         with col3:
             num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_test_multiple")
         with col4:
-            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_test_multiple")
+            line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_test_multiple")
         with col5:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test_multiple")
         with col6:
             num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int_multiple")
             X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
-            
+
             # Ensure rand_idx persists
             if 'rand_idx_test' not in st.session_state:
-                st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
-
-            if st.button("Load new random test sequence"):
                 st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
 
             rand_idx = st.session_state.rand_idx_test
@@ -478,6 +474,10 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
             x = scaler.inverse_transform(x)
             y_true = scaler.inverse_transform(y_true)
             y_pred = scaler.inverse_transform(y_pred)
+        
+
+        if st.button("Load new random test sequence", key="button_rand_test"):
+            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
 
 
         st.write(f"Showing test results for sequence length {num_int}, data shape: {tuple(X_test_seq.shape)}, true: {y_true.shape}, pred: {y_pred.shape}")
