@@ -1,8 +1,6 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import yfinance as yf
-import plotly.express as px
 from streamlit_utils import *
 from utils import add_financial_features
 from torch_utils import *
@@ -19,22 +17,19 @@ def load_data():
 def load_model_train_data(df):
     return load_showcase_train_data(df)
 
+# Config
 st.set_page_config(page_title="Stock Dashboard + LSTM Showcase", layout="wide")
 
-# --- Sidebar Navigation ---
+# Sidebar
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["📈 AAPL Stock Dashboard", "🤖 LSTM Model Showcase"])
 
-# --- Load data ---
 df = load_data()
-df_models = df[df.index >= '2015-01-01']
+df_models = df[df.index >= '2015-01-01'] # Models were trained with this data
 X_train, y_train, y_train_multiple, X_test_scaled = load_model_train_data(df_models)
 available_columns = df.columns.tolist()
 basic_features = available_columns[:5]
 derived_features = available_columns[5:]
-
-
-# --- Page 1: AAPL Dashboard ---
 
 if page == "📈 AAPL Stock Dashboard":
 
@@ -54,9 +49,6 @@ if page == "📈 AAPL Stock Dashboard":
 
     st.subheader("Candlestick Chart")
     render_candlestick(df)
-
-
-# --- Page 2: LSTM Model Showcase ---
 
 elif page == "🤖 LSTM Model Showcase":
 
