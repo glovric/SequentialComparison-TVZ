@@ -12,6 +12,13 @@ pip install -r requirements.txt
 
 ```bash
 cd SequentialComparison-TVZ
-docker build -t streamlit-app . 
+
+# Build image
+docker build -t streamlit-app .
+
+# Create container
 docker run --name my_streamlit_app -p 8501:8501 streamlit-app
+
+# Running existing container
+docker start -a my_streamlit_app
 ```
