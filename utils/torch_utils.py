@@ -61,6 +61,7 @@ def load_lstm_model(predict_sequence=False):
     n_features = 10
     hidden_dim = 128
     num_layers = 3
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if not predict_sequence:
         dropout = 0.3
@@ -70,7 +71,7 @@ def load_lstm_model(predict_sequence=False):
                             num_layers=num_layers, 
                             dropout=dropout, 
                             predict_sequence=predict_sequence)
-        lstm_model.load_state_dict(torch.load("models/lstm_m2o_16-05-2025.pth"))
+        lstm_model.load_state_dict(torch.load("models/lstm_m2o_16-05-2025.pth", map_location=device))
 
     else:
         dropout = 0.1
@@ -80,9 +81,8 @@ def load_lstm_model(predict_sequence=False):
                         num_layers=num_layers, 
                         dropout=dropout, 
                         predict_sequence=predict_sequence)
-        lstm_model.load_state_dict(torch.load("models/lstm_m2m_16-05-2025.pth"))
+        lstm_model.load_state_dict(torch.load("models/lstm_m2m_16-05-2025.pth", map_location=device))
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     lstm_model = lstm_model.to(device)
     return lstm_model
 
