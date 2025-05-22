@@ -4,6 +4,8 @@ from sklearn.model_selection import train_test_split
 import torch
 import joblib
 from utils.utils import create_sequence
+import numpy as np
+import pandas as pd
 
 class StockDataset(Dataset):
 
@@ -104,7 +106,7 @@ class TransformerModel(nn.Module):
         output = self.fc_out(output)
         return output
 
-def to_tensor_to_device(data, device):
+def to_tensor_to_device(data: tuple[np.ndarray, ...], device) -> tuple[torch.Tensor, ...]:
     """
     Converts np.ndarrays into torch.Tensor objects and casts them onto a device.
 
@@ -118,14 +120,28 @@ def to_tensor_to_device(data, device):
 
     Returns
     -------
-    tensors : tuple[torch.Tensor]
+    tensors : tuple[torch.Tensor, ...]
+        Tuple containing torch Tensors.
     """
     return tuple(
         (item if isinstance(item, torch.Tensor) else torch.Tensor(item)).to(device)
         for item in data
     )
 
-def load_showcase_train_data(df):
+def load_showcase_train_data(df: pd.DataFrame) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, np.ndarray]:
+    """
+    Creates train data for the models.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Financial dataframe from which the train data is created.
+
+    Returns
+    -------
+    train_data : tuple[torch.Tensor, torch.Tensor, torch.Tensor, np.ndarray]
+        Train input and output data, test data for further processing.
+    """
     X = df.to_numpy()
     X_train, X_test = train_test_split(X, test_size=0.2, shuffle=False)
     scaler = joblib.load('scalers/standard_scaler.save')
@@ -138,14 +154,45 @@ def load_showcase_train_data(df):
     X_train, y_train, y_train_multiple = to_tensor_to_device(data, device)
     return X_train, y_train, y_train_multiple, X_test_scaled
 
-def load_custom_test_data(X_test_scaled, input_seq_len=10, target_seq_len=1):
+def load_custom_test_data(X_test_scaled: np.ndarray, input_seq_len: int = 10, target_seq_len: int = 1) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Creates test data of variable input and output sequence lengths.
+
+    Parameters
+    ----------
+    X_test_scaled : np.ndarray
+        Scaled input data ready to be transformed into sequences.
+
+    input_seq_len : int, default 10
+        Input sequence length.
+
+    target_seq_len : int, default 1
+        Target sequence length.
+
+    Returns
+    -------
+    test_data : tuple[torch.Tensor, torch.Tensor]
+        Test input and output data.
+    """
     X_test_seq, y_test_seq = create_sequence(X_test_scaled, input_seq_len, target_seq_len)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     data = (X_test_seq, y_test_seq)
     X_test_seq, y_test_seq = to_tensor_to_device(data, device)
     return X_test_seq, y_test_seq
 
-def load_lstm_model(predict_sequence=False):
+def load_lstm_model(predict_sequence: bool = False) -> LSTMModel:
+    """
+    Loads a saved LSTM model.
+
+    Parameters
+    ----------
+    predict_sequence : bool, default False
+        Checks whether the loaded model predicts a sequence (many-to-many) or not (many-to-one).
+
+    Returns
+    -------
+    lstm_model : LSTMModel
+    """
     n_features = 10
     hidden_dim = 128
     num_layers = 3
