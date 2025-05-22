@@ -6,7 +6,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from streamlit_utils import *
-from utils.utils import add_financial_features
+from utils.finance_utils import add_financial_features
 from utils.torch_utils import *
 import joblib
 

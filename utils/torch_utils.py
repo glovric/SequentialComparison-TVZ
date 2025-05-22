@@ -3,7 +3,6 @@ import torch.nn as nn
 from sklearn.model_selection import train_test_split
 import torch
 import joblib
-from utils.utils import create_sequence
 import numpy as np
 import pandas as pd
 
@@ -105,6 +104,37 @@ class TransformerModel(nn.Module):
         output = self.transformer(src, tgt)
         output = self.fc_out(output)
         return output
+
+def create_sequence(data: np.ndarray, input_seq_len: int = 8, target_seq_len: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Creates sequences and targets from data using the provided sequence lengths.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Data used to create sequences.
+
+    input_seq_len : int, default=8
+        Input sequence length.
+    
+    target_sequence_len : int, default=1
+        Target sequence length.
+
+    Returns
+    -------
+    input_sequences, output_sequences : tuple[np.ndarray, np.ndarray]
+        Arrays of input and output sequences.
+    """
+    X = []
+    y = []
+    for i in range(len(data) - input_seq_len - target_seq_len):
+        X.append(data[i:i+input_seq_len])
+        if target_seq_len == 1:
+            y.append(data[(i+input_seq_len)])
+        else:
+            y.append(data[(i+input_seq_len):(i+input_seq_len+target_seq_len)])
+
+    return np.array(X), np.array(y)
 
 def to_tensor_to_device(data: tuple[np.ndarray, ...], device) -> tuple[torch.Tensor, ...]:
     """
