@@ -31,7 +31,95 @@ class StockDataset(Dataset):
         target = self.targets[idx]
         return sample, target
 
+class LSTMModel(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=6, dropout=0.1, predict_sequence = False):
+        super(LSTMModel, self).__init__()
+
+        self.predict_sequence = predict_sequence
+        
+        self.lstm = nn.LSTM(input_size=input_dim, 
+                            hidden_size=hidden_dim, 
+                            num_layers=num_layers, 
+                            dropout=dropout,
+                            batch_first=True)
+        
+        self.fc_out = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        
+        output, (h_out, c_out) = self.lstm(x)
+        #torch.allclose(output[:, -1, :], h_out[-1]
+
+        if self.predict_sequence:
+            out = self.fc_out(output)
+        else:
+            out = self.fc_out(output[:, -1, :])
+        
+        return out
+    
+class GRUModel(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=6, dropout=0.1, predict_sequence = False):
+        super(GRUModel, self).__init__()
+
+        self.predict_sequence = predict_sequence
+        
+        self.gru = nn.GRU(input_size=input_dim, 
+                            hidden_size=hidden_dim, 
+                            num_layers=num_layers, 
+                            dropout=dropout,
+                            batch_first=True)
+        
+        self.fc_out = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        
+        output, h_out = self.gru(x)
+        #torch.allclose(output[:, -1, :], h_out[-1]
+
+        if self.predict_sequence:
+            out = self.fc_out(output)
+        else:
+            out = self.fc_out(output[:, -1, :])
+        
+        return out
+    
+class TransformerModel(nn.Module):
+    def __init__(self, input_dim, output_dim, num_heads, num_layers=6, dim_ff=2048, dropout=0.1):
+        super(TransformerModel, self).__init__()
+        
+        self.transformer = nn.Transformer(
+            d_model=input_dim,
+            nhead=num_heads,
+            num_encoder_layers=num_layers,
+            num_decoder_layers=num_layers,
+            dim_feedforward=dim_ff, 
+            dropout=dropout,
+            batch_first=True
+        )
+        
+        self.fc_out = nn.Linear(input_dim, output_dim)
+
+    def forward(self, src, tgt):
+        output = self.transformer(src, tgt)
+        output = self.fc_out(output)
+        return output
+
 def to_tensor_to_device(data, device):
+    """
+    Converts np.ndarrays into torch.Tensor objects and casts them onto a device.
+
+    Parameters
+    ----------
+    data : tuple[np.ndarray]
+        Tuple containing np.ndarrays.
+
+    device : str
+        Device for the torch Tensors.
+
+    Returns
+    -------
+    tensors : tuple[torch.Tensor]
+    """
     return tuple(
         (item if isinstance(item, torch.Tensor) else torch.Tensor(item)).to(device)
         for item in data
@@ -85,30 +173,3 @@ def load_lstm_model(predict_sequence=False):
 
     lstm_model = lstm_model.to(device)
     return lstm_model
-
-    
-class LSTMModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=6, dropout=0.1, predict_sequence = False):
-        super(LSTMModel, self).__init__()
-
-        self.predict_sequence = predict_sequence
-        
-        self.lstm = nn.LSTM(input_size=input_dim, 
-                            hidden_size=hidden_dim, 
-                            num_layers=num_layers, 
-                            dropout=dropout,
-                            batch_first=True)
-        
-        self.fc_out = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x):
-        
-        output, (h_out, c_out) = self.lstm(x)
-        #torch.allclose(output[:, -1, :], h_out[-1]
-
-        if self.predict_sequence:
-            out = self.fc_out(output)
-        else:
-            out = self.fc_out(output[:, -1, :])
-        
-        return out

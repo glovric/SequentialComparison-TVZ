@@ -459,21 +459,22 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test_multiple")
         with col6:
             num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int_multiple")
-            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
+            
+        X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
 
-            # Ensure rand_idx persists
-            if 'rand_idx_test' not in st.session_state:
-                st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+        # Ensure rand_idx persists
+        if 'rand_idx_test' not in st.session_state:
+            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
 
-            rand_idx = st.session_state.rand_idx_test
+        rand_idx = st.session_state.rand_idx_test
 
-            x = X_test_seq[rand_idx].cpu().detach().numpy()
-            y_true = y_test_seq[rand_idx].cpu().detach().numpy()
-            y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
+        x = X_test_seq[rand_idx].cpu().detach().numpy()
+        y_true = y_test_seq[rand_idx].cpu().detach().numpy()
+        y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
 
-            x = scaler.inverse_transform(x)
-            y_true = scaler.inverse_transform(y_true)
-            y_pred = scaler.inverse_transform(y_pred)
+        x = scaler.inverse_transform(x)
+        y_true = scaler.inverse_transform(y_true)
+        y_pred = scaler.inverse_transform(y_pred)
         
 
         if st.button("Load new random test sequence", key="button_rand_test"):

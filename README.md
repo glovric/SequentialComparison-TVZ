@@ -8,17 +8,23 @@ Models LSTM, GRU and Transformer are trained and tested on stock price data.
 pip install -r requirements.txt
 ```
 
-## Docker
+If you would like to use PyTorch with CUDA (adjust CUDA version if needed):
+
+```python 
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+```
+
+## Docker Setup
 
 ```bash
 cd SequentialComparison-TVZ
 
 # Build image
-docker build -t streamlit-app .
+docker build -t seqcomp-tvz .
 
 # Create container
-docker run --name my_streamlit_app -p 8501:8501 streamlit-app
+docker run --name seq_app -p 8501:8501 seqcomp-tvz
 
 # Running existing container
-docker start -a my_streamlit_app
+docker start -a seq_app
 ```

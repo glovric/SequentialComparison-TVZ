@@ -6,6 +6,5 @@ torch
 plotly
 scikit-learn
 nbformat
-tensorboard
-tqdm
 streamlit
+ipykernel
