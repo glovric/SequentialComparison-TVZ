@@ -1,8 +1,9 @@
-numpy
+numpy<2
 pandas
 matplotlib
 yfinance
-torch
+torch==2.1.0+cpu
+-f https://download.pytorch.org/whl/torch_stable.html
 plotly
 scikit-learn
 nbformat
