@@ -3,13 +3,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 from utils.torch_utils import load_custom_test_data
 import joblib
-import pandas as pd
 import numpy as np
 
 def render_histograms(df, basic_features, derived_features):
 
     # Create 3 columns, two for multiselects and one for color picker
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     # Use column 1 for basic features
     with col1:
@@ -27,29 +26,32 @@ def render_histograms(df, basic_features, derived_features):
             default=["Daily Return"]
         )
 
+    with col3:
+        st.empty()
+
     # Combine all selected features
     selected_hist_features = basic_selected + derived_selected
 
     # If any features are selected render the histograms
     if selected_hist_features:
 
-        # Show color picker in third column
-        with col3:
-            hist_color = st.color_picker("Pick a histogram color", "#636EFA")
-
         # Create one column for slider, other will be empty
-        col1, col2 = st.columns([1, 3])
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 3])
 
         # Use column 1 for slider
         with col1:
-            bins = st.slider("Number of bins", min_value=5, max_value=100, value=30, step=5)
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_hist")
         with col2:
+            bins = st.slider("Number of bins", min_value=5, max_value=100, value=30, step=5)
+        with col3:
+            hist_color = st.color_picker("Pick a histogram color", "#636EFA")
+        with col4:
             st.empty()
 
         # Plot histograms in two columns
-        hist_cols = st.columns(2)
+        hist_cols = st.columns(num_columns)
         for i, feature in enumerate(selected_hist_features):
-            col = hist_cols[i % 2]
+            col = hist_cols[i % num_columns]
             with col:
                 fig = go.Figure()
                 fig.add_trace(go.Histogram(
@@ -66,11 +68,11 @@ def render_histograms(df, basic_features, derived_features):
                     template="plotly_white"
                 )
                 st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                hist_cols = st.columns(2)
+            if (i + 1) % num_columns == 0:
+                hist_cols = st.columns(num_columns)
 
 def render_box_whiskers(df, basic_features, derived_features):
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
         basic_selected_box = st.multiselect(
@@ -85,26 +87,36 @@ def render_box_whiskers(df, basic_features, derived_features):
             derived_features,
             default=["Daily Return"]
         )
+    with col3:
+        st.empty()
 
     selected_box_features = basic_selected_box + derived_selected_box
 
     if selected_box_features:
-        with col3:
+
+        col1, col2, col3 = st.columns([2, 2, 3])
+
+        with col1:
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_box")
+        with col2:
             box_color = st.color_picker("Pick a box plot color", "#EF553B")
-        box_cols = st.columns(2)
+        with col3:
+            st.empty()
+
+        box_cols = st.columns(num_columns)
         for i, feature in enumerate(selected_box_features):
-            col = box_cols[i % 2]
+            col = box_cols[i % num_columns]
             with col:
                 fig = px.box(
                     df, y=feature, title=f"Box Plot of {feature}",
                     template="plotly_white", color_discrete_sequence=[box_color], points="outliers"
                 )
                 st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                box_cols = st.columns(2)
+            if (i + 1) % num_columns == 0:
+                box_cols = st.columns(num_columns)
 
 def render_line(df, basic_features, derived_features):
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -123,19 +135,27 @@ def render_line(df, basic_features, derived_features):
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
-        with col3:
+
+        col1, col2, col3 = st.columns([2, 2, 3])
+
+        with col1:
+            num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_line")
+        with col2:
             line_color = st.color_picker("Pick a line plot color", "#EF553B")
-        line_cols = st.columns(2)
+        with col3:
+            st.empty()
+
+        line_cols = st.columns(num_columns)
         for i, feature in enumerate(selected_line_features):
-            col = line_cols[i % 2]
+            col = line_cols[i % num_columns]
             with col:
                 fig = px.line(
                     df, x=df.index, y=feature, title=f"Line Chart of {feature}",
                     template="plotly_white", color_discrete_sequence=[line_color]
                 )
                 st.plotly_chart(fig, use_container_width=True)
-            if (i + 1) % 2 == 0:
-                line_cols = st.columns(2)
+            if (i + 1) % num_columns == 0:
+                line_cols = st.columns(num_columns)
 
 def render_candlestick(df):
     show_candlestick = st.checkbox("Show Candlestick Chart", value=True)
@@ -166,7 +186,7 @@ def render_candlestick(df):
 
 def render_data_summary(df):
     with st.expander("Show raw data"):
-        st.write(df.head())
+        st.write(df.tail())
     st.write("📐 DataFrame shape:", df.shape)
     st.write("📊 Descriptive statistics:")
     st.write(df.describe())
