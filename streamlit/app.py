@@ -141,6 +141,7 @@ if page == "📊 Model Comparison":
     }
 
     df_comparison = pd.DataFrame(comparison_data)
+    df_comparison.index = range(1, len(df_comparison) + 1)  # Start index at 1
 
     st.subheader("Performance Metrics")
     st.table(df_comparison)
