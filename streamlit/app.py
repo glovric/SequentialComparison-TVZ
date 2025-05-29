@@ -79,16 +79,16 @@ elif page == "🤖 LSTM Model Showcase":
     lstm_model2.eval()
 
     st.subheader("LSTM many-to-one Training Results")
-    render_lstm_train(df_models, lstm_model, X_train, y_train, basic_features, derived_features)
+    render_model_train(df_models, lstm_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("LSTM many-to-one Test Results")
-    render_lstm_test(df_models, lstm_model, X_test_scaled, basic_features, derived_features)
+    render_model_test(df_models, lstm_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("LSTM many-to-many Training Results")
-    render_lstm_train2(df_models, lstm_model2, X_train, y_train_multiple, basic_features, derived_features)
+    render_model_train_multiple(df_models, lstm_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("LSTM many-to-many Test Results")
-    render_lstm_test2(df_models, lstm_model2, X_test_scaled, basic_features, derived_features)
+    render_model_test_multiple(df_models, lstm_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "🔄 GRU Model Showcase":
 
@@ -98,16 +98,16 @@ if page == "🔄 GRU Model Showcase":
     gru_model2.eval()
 
     st.subheader("GRU many-to-one Training Results")
-    render_lstm_train(df_models, gru_model, X_train, y_train, basic_features, derived_features)
+    render_model_train(df_models, gru_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("GRU many-to-one Test Results")
-    render_lstm_test(df_models, gru_model, X_test_scaled, basic_features, derived_features)
+    render_model_test(df_models, gru_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("GRU many-to-many Training Results")
-    render_lstm_train2(df_models, gru_model2, X_train, y_train_multiple, basic_features, derived_features)
+    render_model_train_multiple(df_models, gru_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("GRU many-to-many Test Results")
-    render_lstm_test2(df_models, gru_model2, X_test_scaled, basic_features, derived_features)
+    render_model_test_multiple(df_models, gru_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "⚡ Transformer Model Showcase":
 
@@ -117,16 +117,16 @@ if page == "⚡ Transformer Model Showcase":
     transformer_model2.eval()
 
     st.subheader("Transformer many-to-one Training Results")
-    render_lstm_train(df_models, transformer_model, X_train, y_train, basic_features, derived_features)
+    render_model_train(df_models, transformer_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("Transformer many-to-one Test Results")
-    render_lstm_test(df_models, transformer_model, X_test_scaled, basic_features, derived_features)
+    render_model_test(df_models, transformer_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("Transformer many-to-many Training Results")
-    render_lstm_train2(df_models, transformer_model2, X_train, y_train_multiple, basic_features, derived_features)
+    render_model_train_multiple(df_models, transformer_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("Transformer many-to-many Test Results")
-    render_lstm_test2(df_models, transformer_model2, X_test_scaled, basic_features, derived_features)
+    render_model_test_multiple(df_models, transformer_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "📊 Model Comparison":
 

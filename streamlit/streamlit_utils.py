@@ -1,11 +1,13 @@
+import numpy as np
+import pandas as pd
+import torch
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
-from utils.torch_utils import load_custom_test_data, TransformerModel
 import joblib
-import numpy as np
+from utils.torch_utils import load_custom_test_data, LSTMModel, GRUModel, TransformerModel
 
-def render_histograms(df, basic_features, derived_features):
+def render_histograms(df: pd.DataFrame, basic_features: list[str], derived_features: list[str]) -> None:
 
     # Create 3 columns, two for multiselects and one for color picker
     col1, col2, col3 = st.columns([2, 2, 3])
@@ -71,7 +73,7 @@ def render_histograms(df, basic_features, derived_features):
             if (i + 1) % num_columns == 0:
                 hist_cols = st.columns(num_columns)
 
-def render_box_whiskers(df, basic_features, derived_features):
+def render_box_whiskers(df: pd.DataFrame, basic_features: list[str], derived_features: list[str]) -> None:
     col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
@@ -115,7 +117,7 @@ def render_box_whiskers(df, basic_features, derived_features):
             if (i + 1) % num_columns == 0:
                 box_cols = st.columns(num_columns)
 
-def render_line(df, basic_features, derived_features):
+def render_line(df: pd.DataFrame, basic_features: list[str], derived_features: list[str]) -> None:
     col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
@@ -157,7 +159,7 @@ def render_line(df, basic_features, derived_features):
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
-def render_candlestick(df):
+def render_candlestick(df: pd.DataFrame) -> None:
     show_candlestick = st.checkbox("Show Candlestick Chart", value=True)
 
     if show_candlestick:
@@ -184,14 +186,14 @@ def render_candlestick(df):
 
         st.plotly_chart(fig_candle, use_container_width=True)
 
-def render_data_summary(df):
+def render_data_summary(df: pd.DataFrame) -> None:
     with st.expander("Show raw data"):
         st.write(df.tail())
     st.write("📐 DataFrame shape:", df.shape)
     st.write("📊 Descriptive statistics:")
     st.write(df.describe())
 
-def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
+def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_train_seq: torch.Tensor, y_train_seq: torch.Tensor, basic_features: list[str], derived_features: list[str]) -> None:
 
     scaler = joblib.load('scalers/standard_scaler.save')
 
@@ -275,7 +277,7 @@ def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, deriv
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
-def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features):
+def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
     scaler = joblib.load('scalers/standard_scaler.save')
 
@@ -362,7 +364,7 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
-def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
+def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_train_seq: torch.Tensor, y_train_seq: torch.Tensor, basic_features: list[str], derived_features: list[str]) -> None:
     scaler = joblib.load('scalers/standard_scaler.save')
     col1, col2, col3 = st.columns([2, 2, 3])
     
@@ -476,7 +478,7 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
-def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features):
+def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
     scaler = joblib.load('scalers/standard_scaler.save')
     col1, col2, col3 = st.columns([2, 2, 3])
