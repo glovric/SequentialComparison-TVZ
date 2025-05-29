@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
-from utils.torch_utils import load_custom_test_data
+from utils.torch_utils import load_custom_test_data, TransformerModel
 import joblib
 import numpy as np
 
@@ -194,13 +194,18 @@ def render_data_summary(df):
 def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
 
     scaler = joblib.load('scalers/standard_scaler.save')
+
+    if isinstance(model, TransformerModel):
+        y_pred = model(X_train_seq, y_train_seq.unsqueeze(1)).squeeze(1).cpu().detach().numpy()
+    else:
+        y_pred = model(X_train_seq).cpu().detach().numpy()
+
     y_true = scaler.inverse_transform(y_train_seq.cpu().detach().numpy())
-    y_pred = model(X_train_seq).cpu().detach().numpy()
     y_pred = scaler.inverse_transform(y_pred)
 
     train_dates = df.index[:len(X_train_seq)]
 
-    col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -217,17 +222,23 @@ def render_lstm_train(df, model, X_train_seq, y_train_seq, basic_features, deriv
             default=["Daily Return"],
             key="derived_features_train"            
         )
+    with col3:
+        st.empty()
 
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
 
-        with col3:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
+
+        with col1:
             num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_train")
-        with col4:
+        with col2:
             line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_train")
-        with col5:
+        with col3:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train")
+        with col4:
+            st.empty()
 
         line_cols = st.columns(num_columns)
 
@@ -299,15 +310,20 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
         with col2:
             num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int")
         with col3:
-            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
+            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_test")
         with col4:
-            line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_test")
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
         with col5:
             st.empty()
 
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
+
+        if isinstance(model, TransformerModel):
+            y_pred = model(X_test_seq, y_test_seq.unsqueeze(1)).squeeze(1).cpu().detach().numpy()
+        else:
+            y_pred = model(X_test_seq).cpu().detach().numpy()
+
         y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
-        y_pred = model(X_test_seq).cpu().detach().numpy()
         y_pred = scaler.inverse_transform(y_pred)
         test_dates = df.index[-len(X_test_seq):]
 
@@ -358,7 +374,11 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
 
     x = X_train_seq[rand_idx].cpu().detach().numpy()
     y_true = y_train_seq[rand_idx].cpu().detach().numpy()
-    y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
+
+    if isinstance(model, TransformerModel):
+        y_pred = model(X_train_seq[rand_idx], y_train_seq[rand_idx]).cpu().detach().numpy()
+    else:
+        y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
 
     x = scaler.inverse_transform(x)
     y_true = scaler.inverse_transform(y_true)
@@ -510,7 +530,11 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
 
         x = X_test_seq[rand_idx].cpu().detach().numpy()
         y_true = y_test_seq[rand_idx].cpu().detach().numpy()
-        y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
+        
+        if isinstance(model, TransformerModel):
+            y_pred = model(X_test_seq[rand_idx], y_test_seq[rand_idx]).cpu().detach().numpy()
+        else:
+            y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
 
         x = scaler.inverse_transform(x)
         y_true = scaler.inverse_transform(y_true)

@@ -250,3 +250,82 @@ def load_lstm_model(predict_sequence: bool = False) -> LSTMModel:
 
     lstm_model = lstm_model.to(device)
     return lstm_model
+
+def load_gru_model(predict_sequence: bool = False) -> GRUModel:
+    """
+    Loads a saved GRU model.
+
+    Parameters
+    ----------
+    predict_sequence : bool, default False
+        Checks whether the loaded model predicts a sequence (many-to-many) or not (many-to-one).
+
+    Returns
+    -------
+    gru_model : GRUModel
+    """
+    n_features = 10
+    hidden_dim = 128
+    num_layers = 3
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    if not predict_sequence:
+        dropout = 0.3
+        gru_model = GRUModel(input_dim=n_features, 
+                            output_dim=n_features, 
+                            hidden_dim=hidden_dim, 
+                            num_layers=num_layers, 
+                            dropout=dropout, 
+                            predict_sequence=predict_sequence)
+        gru_model.load_state_dict(torch.load("models/gru_m2o_22-05-2025.pth", map_location=device))
+
+    else:
+        dropout = 0.1
+        gru_model = GRUModel(input_dim=n_features, 
+                        output_dim=n_features, 
+                        hidden_dim=hidden_dim, 
+                        num_layers=num_layers, 
+                        dropout=dropout, 
+                        predict_sequence=predict_sequence)
+        gru_model.load_state_dict(torch.load("models/gru_m2m_22-05-2025.pth", map_location=device))
+
+    gru_model = gru_model.to(device)
+    return gru_model
+
+def load_transformer_model(predict_sequence: bool = False) -> TransformerModel:
+    """
+    Loads a saved transformer model.
+
+    Parameters
+    ----------
+    predict_sequence : bool, default False
+        Checks whether the loaded model predicts a sequence (many-to-many) or not (many-to-one).
+
+    Returns
+    -------
+    transformer_model : TransformerModel
+    """
+    n_features = 10
+    num_layers = 3
+    num_heads = 5
+    dropout = 0.3
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    if not predict_sequence:
+        transformer_model = TransformerModel(input_dim=n_features, 
+                                             output_dim=n_features, 
+                                             num_heads=num_heads, 
+                                             dropout=dropout, 
+                                             num_layers=num_layers)
+        transformer_model.load_state_dict(torch.load("models/transformer_m2o_22-05-2025.pth", map_location=device))
+
+    else:
+        transformer_model = TransformerModel(input_dim=n_features, 
+                                             output_dim=n_features, 
+                                             num_heads=num_heads, 
+                                             dropout=dropout, 
+                                             num_layers=num_layers)
+        transformer_model.load_state_dict(torch.load("models/transformer_m2m_22-05-2025.pth", map_location=device))
+
+    transformer_model = transformer_model.to(device)
+    return transformer_model
