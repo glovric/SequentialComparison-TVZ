@@ -268,7 +268,7 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
     
     scaler = joblib.load('scalers/standard_scaler.save')
 
-    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 1, 1, 1, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -285,26 +285,31 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
             default=["Daily Return"],
             key="derived_features_test"
         )
+    with col3:
+        st.empty()
+
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
 
-        with col3:
+        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 3])
+
+        with col1:
             num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_test")
-        with col4:
-            line_color_true = st.color_picker("True line color", "#1f77b4", key="line_color_true_key_test")
-        with col5:
-            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
-        with col6:
+        with col2:
             num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int")
-            X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
-            y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
-            y_pred = model(X_test_seq).cpu().detach().numpy()
-            y_pred = scaler.inverse_transform(y_pred)
-            test_dates = df.index[-len(X_test_seq):]
+        with col3:
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
+        with col4:
+            line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_test")
+        with col5:
+            st.empty()
 
-        st.write(f"Showing test results for sequence length {num_int}, data shape: {tuple(X_test_seq.shape)}")
-
+        X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
+        y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
+        y_pred = model(X_test_seq).cpu().detach().numpy()
+        y_pred = scaler.inverse_transform(y_pred)
+        test_dates = df.index[-len(X_test_seq):]
 
         line_cols = st.columns(num_columns)
 
@@ -343,6 +348,7 @@ def render_lstm_test(df, model, X_test_scaled, basic_features, derived_features)
 
 def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, derived_features):
     scaler = joblib.load('scalers/standard_scaler.save')
+    col1, col2, col3 = st.columns([2, 2, 3])
     
     # Ensure rand_idx persists
     if 'rand_idx_train' not in st.session_state:
@@ -357,8 +363,6 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
     x = scaler.inverse_transform(x)
     y_true = scaler.inverse_transform(y_true)
     y_pred = scaler.inverse_transform(y_pred)
-
-    col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 1])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -375,17 +379,23 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
             default=["Daily Return"],
             key="derived_features_train_multiple"            
         )
+    with col3:
+        st.empty()
 
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
 
-        with col3:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
+
+        with col1:
             num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_train_multiple")
-        with col4:
+        with col2:
             line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_train_multiple")
-        with col5:
+        with col3:
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_train_multiple")
+        with col4:
+            st.empty()
 
         if st.button("Load new random train sequence", key="button_rand_train"):
             st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
@@ -449,8 +459,7 @@ def render_lstm_train2(df, model, X_train_seq, y_train_seq, basic_features, deri
 def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features):
     
     scaler = joblib.load('scalers/standard_scaler.save')
-
-    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 1, 1, 1, 1])
+    col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -467,24 +476,35 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
             default=["Daily Return"],
             key="derived_features_test_multiple"
         )
+    
+    with col3:
+        st.empty()
+
     selected_line_features = basic_selected_line + derived_selected_line
 
     if selected_line_features:
 
-        with col3:
+        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 3])
+
+        with col1:
             num_columns = st.number_input("Number of columns", min_value=1, max_value=5, step=1, value=2, key="num_columns_test_multiple")
+        with col2:
+            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int_multiple")
+        with col3:
+            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test_multiple")
         with col4:
             line_color_true = st.color_picker("True line color", "#1FB44F", key="line_color_true_key_test_multiple")
         with col5:
-            line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test_multiple")
-        with col6:
-            num_int = st.number_input("Sequence length:", min_value=1, max_value=100, step=1, value=10, key="num_int_multiple")
+            st.empty()
             
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
 
         # Ensure rand_idx persists
         if 'rand_idx_test' not in st.session_state:
-            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+            st.session_state.rand_idx_test = 0
+
+        if st.session_state.rand_idx_test >= len(X_test_seq):
+            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq)) if len(X_test_seq) > 0 else 0
 
         rand_idx = st.session_state.rand_idx_test
 
@@ -498,11 +518,12 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
         
 
         if st.button("Load new random test sequence", key="button_rand_test"):
-            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+            if len(X_test_seq) > 0:
+                st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
+            else:
+                st.session_state.rand_idx_test = 0
 
-
-        st.write(f"Showing test results for sequence length {num_int}, data shape: {tuple(X_test_seq.shape)}, true: {y_true.shape}, pred: {y_pred.shape}")
-
+            rand_idx = st.session_state.rand_idx_test
 
         line_cols = st.columns(num_columns)
 
@@ -548,7 +569,7 @@ def render_lstm_test2(df, model, X_test_scaled, basic_features, derived_features
                 ))
 
                 fig.update_layout(
-                    title=f"Train results for {feature}",
+                    title=f"Test results for {feature}",
                     template="plotly_white",
                     legend=dict(x=0.01, y=0.99),
                     margin=dict(t=40, b=20),
