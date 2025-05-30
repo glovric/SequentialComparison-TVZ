@@ -132,16 +132,63 @@ if page == "📊 Model Comparison":
 
     st.title("📊 Model Comparison")
 
-    # Sample model metrics
-    comparison_data = {
+    st.write("Models were trained using PyTorch CUDA, device NVIDIA GeForce GTX 1650, 4GB VRAM.")
+    st.markdown("""
+    - Optimizer: Adam  
+    - Loss function: MSE
+    - Many-to-one number of epochs: 200  
+    - Many-to-many number of epochs: 500
+    """)
+
+    st.subheader("Hyperparameters")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("##### *LSTM*")
+        st.markdown("""
+        - Hidden dimension: 128  
+        - Number of LSTM layers: 3  
+        - Dropout: 0.3  
+        """)
+
+    with col2:
+        st.markdown("##### *GRU*")
+        st.markdown("""
+        - Hidden dimension: 128  
+        - Number of GRU layers: 3  
+        - Dropout: 0.3  
+        """)
+
+    with col3:
+        st.markdown("##### *Transformer*")
+        st.markdown("""
+        - Number of encoder/decoder layers: 3  
+        - Number of Attention Heads: 5  
+        - Feed-forward dimension: 2048  
+        - Dropout: 0.3  
+        """)
+
+
+    m2o_metrics = {
         "Model": ["LSTM", "GRU", "Transformer"],
-        "Training Time (s)": [30.386, 25.116, 75.155],
+        "Training Time (s)": [30.386, 25.116, 75.155], 
         "Train Score (MSE)": [0.1206, 0.0714, 0.1066],
         "Test Score (MSE)": [0.7709, 0.7002, 0.622]
     }
 
-    df_comparison = pd.DataFrame(comparison_data)
-    df_comparison.index = range(1, len(df_comparison) + 1)  # Start index at 1
+    m2m_metrics = {
+        "Model": ["LSTM", "GRU", "Transformer"],
+        "Training Time (s)": [57.7, 44.5, 196.3], 
+        "Train Score (MSE)": [0.0469, 0.0882, 0.0451],
+        "Test Score (MSE)": [0.93975, 1.0225, 0.5546]
+    }
 
-    st.subheader("Performance Metrics")
-    st.table(df_comparison)
+    df_m2o = pd.DataFrame(m2o_metrics)
+    df_m2m = pd.DataFrame(m2m_metrics)
+    df_m2o.index = range(1, len(df_m2o) + 1)
+    df_m2m.index = range(1, len(df_m2m) + 1)
+
+    st.subheader("Many-to-one Performance Metrics")
+    st.table(df_m2o)
+    st.subheader("Many-to-many Performance Metrics")
+    st.table(df_m2m)
