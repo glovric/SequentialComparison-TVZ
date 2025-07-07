@@ -6,9 +6,10 @@ COPY streamlit/ streamlit/
 COPY utils/ utils/
 COPY models/ models/
 COPY scalers/ scalers/
+COPY requirements.txt .
 
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r streamlit/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8501
 
