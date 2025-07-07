@@ -188,7 +188,8 @@ def render_candlestick(df: pd.DataFrame) -> None:
 
 def render_data_summary(df: pd.DataFrame) -> None:
     with st.expander("Show raw data"):
-        st.write(df.tail())
+        combined = pd.concat([df.head(), df.tail()])
+        st.write(combined)
     st.write("📐 DataFrame shape:", df.shape)
     st.write("📊 Descriptive statistics:")
     st.write(df.describe())
