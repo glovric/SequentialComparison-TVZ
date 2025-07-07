@@ -11,7 +11,7 @@ from utils.torch_utils import *
 
 @st.cache_data
 def load_data():
-    df = yf.download('AAPL')
+    df = yf.download('AAPL', period='max')
     df.columns = df.columns.droplevel(1) if isinstance(df.columns, pd.MultiIndex) else df.columns
     df = add_financial_features(df)
     return df

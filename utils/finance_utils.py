@@ -61,7 +61,7 @@ def get_financial_data(ticker: str = "AAPL", start_date: str = "2015-01-01", win
     -------
     financial_data : pd.DataFrame
     """
-    df = yf.download(ticker) # Download data
+    df = yf.download(ticker, period='max') # Download data
     df.columns = df.columns.droplevel(1) # Drop Ticker index
     df = add_financial_features(df, window) # Add finacial data (Returns, SMA, ATR)
     df = df[df.index >= start_date] # Select rows starting at start_date
