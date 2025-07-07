@@ -1,7 +1,12 @@
 # Comparison of deep learning sequential models
 
 Models LSTM, GRU and Transformer are trained and tested on stock price data.
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://sequentialcomparison-tvz-luy7mu7dtew6g2i6crparp.streamlit.app/)
+
+## 🚀 Live Demo
+
+The app can be found at the following link: 
+
+[![Streamlit Community Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://sequentialcomparison-tvz-luy7mu7dtew6g2i6crparp.streamlit.app/)
 
 ## Local Installation
 
