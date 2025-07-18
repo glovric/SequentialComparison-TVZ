@@ -1,11 +1,32 @@
 import numpy as np
 import pandas as pd
 import torch
+from sklearn.metrics import mean_absolute_error, mean_squared_error, root_mean_squared_error, mean_absolute_percentage_error
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 import joblib
 from utils.torch_utils import load_custom_test_data, LSTMModel, GRUModel, TransformerModel
+
+# Function to calculate the selected metric
+def calculate_metric(metric_name, y_true, y_pred, idx):
+    if metric_name == "MSE":
+        return mean_squared_error(y_true[:, idx], y_pred[:, idx])
+    elif metric_name == "RMSE":
+        return root_mean_squared_error(y_true[:, idx], y_pred[:, idx])
+    elif metric_name == "MAE":
+        return mean_absolute_error(y_true[:, idx], y_pred[:, idx])
+    elif metric_name == "MAPE":
+        return mean_absolute_percentage_error(y_true[:, idx], y_pred[:, idx]) * 100
+
+def display_metric_html(metrics: list[str], metric_results: dict[str, float]):
+    return "<div style='text-align: center;'>" + \
+                " | ".join([
+                f"<strong>{metric}</strong>: {metric_results[metric]:.4f}%" if metric == "MAPE"
+                else f"<strong>{metric}</strong>: {metric_results[metric]:.4f}"
+                for metric in metrics
+                ]) + \
+            "</div>"
 
 def render_histograms(df: pd.DataFrame, basic_features: list[str], derived_features: list[str]) -> None:
 
@@ -208,7 +229,7 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
 
     train_dates = df.index[:len(X_train_seq)]
 
-    col1, col2, col3 = st.columns([2, 2, 3])
+    col1, col2, col3 = st.columns([2, 2, 2])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -223,15 +244,20 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
             "Select derived features to plot true vs. predicted",
             derived_features,
             default=["Daily Return"],
-            key="derived_features_train"            
+            key="derived_features_train"
         )
-    with col3:
-        st.empty()
 
-    selected_line_features = basic_selected_line + derived_selected_line
+    with col3:
+        metrics = st.multiselect(
+            "Select evaluation metrics",
+            ["MSE", "RMSE", "MAE", "MAPE"],
+            default=["MSE"],  # Default to MSE if no selection is made
+            key="metrics_train"
+        )
+
+    selected_line_features = basic_selected_line + derived_selected_line  
 
     if selected_line_features:
-
         col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
 
         with col1:
@@ -243,27 +269,30 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
         with col4:
             st.empty()
 
+        st.markdown("<br>", unsafe_allow_html=True)
+
         line_cols = st.columns(num_columns)
 
         for i, feature in enumerate(selected_line_features):
-
             col = line_cols[i % num_columns]
-
             with col:
                 idx = df.columns.get_loc(feature)  # get index of the feature in df
 
                 fig = go.Figure()
 
+                # Add true values trace
                 fig.add_trace(go.Scatter(
                     x=train_dates, y=y_true[:, idx],
                     mode='lines', name='True', line=dict(color=line_color_true)
                 ))
 
+                # Add predicted values trace
                 fig.add_trace(go.Scatter(
                     x=train_dates, y=y_pred[:, idx],
                     mode='lines', name='Predicted', line=dict(color=line_color_pred)
                 ))
 
+                # Update the plot title with the selected metrics
                 fig.update_layout(
                     title=f"Train results for {feature}",
                     template="plotly_white",
@@ -273,16 +302,23 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
 
                 fig.update_xaxes(tickformat="%Y-%m")
 
+                # Render the plot
                 st.plotly_chart(fig, use_container_width=True)
+
+                metric_results = {metric : calculate_metric(metric, y_true, y_pred, idx) for metric in metrics}
+                metric_display = display_metric_html(metrics, metric_results)
+                st.markdown(metric_display, unsafe_allow_html=True)
 
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
+
+        st.markdown("<hr style='border: 1px solid #bbb; margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)
 
 def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
     scaler = joblib.load('scalers/standard_scaler.save')
 
-    col1, col2, col3 = st.columns([2, 2, 3])
+    col1, col2, col3 = st.columns([2, 2, 2])
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -300,7 +336,12 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
             key="derived_features_test"
         )
     with col3:
-        st.empty()
+        metrics = st.multiselect(
+            "Select evaluation metrics",
+            ["MSE", "RMSE", "MAE", "MAPE"],
+            default=["MSE"],  # Default to MSE if no selection is made,
+            key="metrics_test"
+        )
 
     selected_line_features = basic_selected_line + derived_selected_line
 
@@ -318,6 +359,8 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
             line_color_pred = st.color_picker("Predicted line color", "#ff7f0e", key="line_color_pred_key_test")
         with col5:
             st.empty()
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
 
@@ -362,12 +405,18 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
 
                 st.plotly_chart(fig, use_container_width=True)
 
+                metric_results = {metric : calculate_metric(metric, y_true, y_pred, idx) for metric in metrics}
+                metric_display = display_metric_html(metrics, metric_results)
+                st.markdown(metric_display, unsafe_allow_html=True)
+
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
 
+        st.markdown("<hr style='border: 1px solid #bbb; margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)
+
 def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_train_seq: torch.Tensor, y_train_seq: torch.Tensor, basic_features: list[str], derived_features: list[str]) -> None:
     scaler = joblib.load('scalers/standard_scaler.save')
-    col1, col2, col3 = st.columns([2, 2, 3])
+    col1, col2, col3 = st.columns([2, 2, 2])
     
     # Ensure rand_idx persists
     if 'rand_idx_train' not in st.session_state:
@@ -379,7 +428,7 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
     y_true = y_train_seq[rand_idx].cpu().detach().numpy()
 
     if isinstance(model, TransformerModel):
-        y_pred = model(X_train_seq[rand_idx], y_train_seq[rand_idx]).cpu().detach().numpy()
+        y_pred = model(X_train_seq[rand_idx], y_train_seq[rand_idx]).squeeze(1).cpu().detach().numpy()
     else:
         y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
 
@@ -403,7 +452,12 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
             key="derived_features_train_multiple"            
         )
     with col3:
-        st.empty()
+        metrics = st.multiselect(
+                    "Select evaluation metrics",
+                    ["MSE", "RMSE", "MAE", "MAPE"],
+                    default=["MSE"],  # Default to MSE if no selection is made,
+                    key="metrics_train_multiple"
+                )
 
     selected_line_features = basic_selected_line + derived_selected_line
 
@@ -422,6 +476,8 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
 
         if st.button("Load new random train sequence", key="button_rand_train"):
             st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         line_cols = st.columns(num_columns)
 
@@ -476,8 +532,14 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
 
                 st.plotly_chart(fig, use_container_width=True)
 
+                metric_results = {metric : calculate_metric(metric, y_true, y_pred, idx) for metric in metrics}
+                metric_display = display_metric_html(metrics, metric_results)
+                st.markdown(metric_display, unsafe_allow_html=True)
+
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)
+
+        st.markdown("<hr style='border: 1px solid #bbb; margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)
 
 def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
@@ -501,7 +563,12 @@ def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | T
         )
     
     with col3:
-        st.empty()
+        metrics = st.multiselect(
+                    "Select evaluation metrics",
+                    ["MSE", "RMSE", "MAE", "MAPE"],
+                    default=["MSE"],  # Default to MSE if no selection is made,
+                    key="metrics_test_multiple"
+                )
 
     selected_line_features = basic_selected_line + derived_selected_line
 
@@ -604,6 +671,10 @@ def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | T
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
+
+                metric_results = {metric : calculate_metric(metric, y_true, y_pred, idx) for metric in metrics}
+                metric_display = display_metric_html(metrics, metric_results)
+                st.markdown(metric_display, unsafe_allow_html=True)
 
             if (i + 1) % num_columns == 0:
                 line_cols = st.columns(num_columns)

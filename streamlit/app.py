@@ -74,58 +74,74 @@ if page == "📈 AAPL Stock Dashboard":
 elif page == "🤖 LSTM Model Showcase":
 
     st.title("🤖 LSTM Model Showcase")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     lstm_model.eval()
     lstm_model2.eval()
 
     st.subheader("LSTM many-to-one Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train(df_models, lstm_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("LSTM many-to-one Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test(df_models, lstm_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("LSTM many-to-many Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train_multiple(df_models, lstm_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("LSTM many-to-many Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test_multiple(df_models, lstm_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "🔄 GRU Model Showcase":
 
     st.title("🔄 GRU Model Showcase")
+    st.markdown("<br>", unsafe_allow_html=True)
+
 
     gru_model.eval()
     gru_model2.eval()
 
     st.subheader("GRU many-to-one Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train(df_models, gru_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("GRU many-to-one Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test(df_models, gru_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("GRU many-to-many Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train_multiple(df_models, gru_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("GRU many-to-many Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test_multiple(df_models, gru_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "⚡ Transformer Model Showcase":
 
     st.title("⚡ Transformer Model Showcase")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     transformer_model.eval()
     transformer_model2.eval()
 
     st.subheader("Transformer many-to-one Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train(df_models, transformer_model, X_train, y_train, basic_features, derived_features)
 
     st.subheader("Transformer many-to-one Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test(df_models, transformer_model, X_test_scaled, basic_features, derived_features)
 
     st.subheader("Transformer many-to-many Training Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_train_multiple(df_models, transformer_model2, X_train, y_train_multiple, basic_features, derived_features)
 
     st.subheader("Transformer many-to-many Test Results")
+    st.markdown("<br>", unsafe_allow_html=True)
     render_model_test_multiple(df_models, transformer_model2, X_test_scaled, basic_features, derived_features)
 
 if page == "📊 Model Comparison":
