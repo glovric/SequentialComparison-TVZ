@@ -220,7 +220,7 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
     scaler = joblib.load('scalers/standard_scaler.save')
 
     if isinstance(model, TransformerModel):
-        y_pred = model(X_train_seq, y_train_seq.unsqueeze(1)).squeeze(1).cpu().detach().numpy()
+        y_pred = model(X_train_seq).squeeze(1).cpu().detach().numpy()
     else:
         y_pred = model(X_train_seq).cpu().detach().numpy()
 
@@ -365,7 +365,7 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
 
         if isinstance(model, TransformerModel):
-            y_pred = model(X_test_seq, y_test_seq.unsqueeze(1)).squeeze(1).cpu().detach().numpy()
+            y_pred = model(X_test_seq).squeeze(1).cpu().detach().numpy()
         else:
             y_pred = model(X_test_seq).cpu().detach().numpy()
 
@@ -428,7 +428,7 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
     y_true = y_train_seq[rand_idx].cpu().detach().numpy()
 
     if isinstance(model, TransformerModel):
-        y_pred = model(X_train_seq[rand_idx], y_train_seq[rand_idx]).squeeze(1).cpu().detach().numpy()
+        y_pred = model(X_train_seq[rand_idx].unsqueeze(1)).squeeze(1).cpu().detach().numpy()
     else:
         y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
 
@@ -602,7 +602,7 @@ def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | T
         y_true = y_test_seq[rand_idx].cpu().detach().numpy()
         
         if isinstance(model, TransformerModel):
-            y_pred = model(X_test_seq[rand_idx], y_test_seq[rand_idx]).cpu().detach().numpy()
+            y_pred = model(X_test_seq[rand_idx].unsqueeze(1)).cpu().detach().numpy()
         else:
             y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
 

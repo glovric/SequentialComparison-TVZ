@@ -84,26 +84,55 @@ class GRUModel(nn.Module):
         
         return out
     
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        self.positional_embeddings = nn.Embedding(max_len, d_model)  # Learnable embeddings for each position
+
+    def forward(self, x):
+        batch_size, seq_len, _ = x.size()
+        positions = torch.arange(0, seq_len, dtype=torch.long, device=x.device)  # (seq_len,)
+        positional_encoding = self.positional_embeddings(positions)  # (seq_len, d_model)
+        positional_encoding = positional_encoding.unsqueeze(0)  # (1, seq_len, d_model)
+        return x + positional_encoding
+
 class TransformerModel(nn.Module):
-    def __init__(self, input_dim, output_dim, num_heads, num_layers=6, dim_ff=2048, dropout=0.1):
+    def __init__(self, input_dim, d_model, output_dim, num_layers=6, nhead=8, dim_feedforward=2048, dropout=0.1, predict_sequence=False):
         super(TransformerModel, self).__init__()
-        
-        self.transformer = nn.Transformer(
-            d_model=input_dim,
-            nhead=num_heads,
-            num_encoder_layers=num_layers,
-            num_decoder_layers=num_layers,
-            dim_feedforward=dim_ff, 
+
+        self.predict_sequence = predict_sequence
+
+        self.input_proj = nn.Sequential(
+                            nn.Linear(input_dim, d_model),
+                            nn.ReLU(),  # or GELU
+                            nn.Linear(d_model, d_model)
+                        )
+
+        self.pos_enc = PositionalEncoding(d_model)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model, 
+            nhead=nhead, 
+            dim_feedforward=dim_feedforward,
             dropout=dropout,
             batch_first=True
         )
-        
-        self.fc_out = nn.Linear(input_dim, output_dim)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
-    def forward(self, src, tgt):
-        output = self.transformer(src, tgt)
-        output = self.fc_out(output)
-        return output
+        self.fc_out = nn.Linear(d_model, output_dim)
+
+    def forward(self, x):
+        x = self.input_proj(x)
+        x = self.pos_enc(x)
+
+        x = self.transformer_encoder(x)
+
+        if self.predict_sequence:
+            out = self.fc_out(x)
+        else:
+            out = self.fc_out(x[:, -1, :])
+
+        return out
 
 def create_sequence(data: np.ndarray, input_seq_len: int = 8, target_seq_len: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -307,25 +336,28 @@ def load_transformer_model(predict_sequence: bool = False) -> TransformerModel:
     """
     n_features = 10
     num_layers = 3
-    num_heads = 5
-    dropout = 0.3
+    num_heads = 8
+    dropout = 0.1
+    d_model = 128
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if not predict_sequence:
         transformer_model = TransformerModel(input_dim=n_features, 
                                              output_dim=n_features, 
-                                             num_heads=num_heads, 
+                                             nhead=num_heads, 
+                                             d_model=d_model,
                                              dropout=dropout, 
                                              num_layers=num_layers)
-        transformer_model.load_state_dict(torch.load("models/transformer_m2o_22-05-2025.pth", map_location=device))
+        transformer_model.load_state_dict(torch.load("models/transformer_m2o_27-08-2025.pth", map_location=device))
 
     else:
         transformer_model = TransformerModel(input_dim=n_features, 
-                                             output_dim=n_features, 
-                                             num_heads=num_heads, 
+                                             output_dim=n_features,
+                                             d_model=d_model, 
+                                             nhead=num_heads, 
                                              dropout=dropout, 
                                              num_layers=num_layers)
-        transformer_model.load_state_dict(torch.load("models/transformer_m2m_22-05-2025.pth", map_location=device))
+        transformer_model.load_state_dict(torch.load("models/transformer_m2m_27-08-2025.pth", map_location=device))
 
     transformer_model = transformer_model.to(device)
     return transformer_model
