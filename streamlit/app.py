@@ -178,25 +178,26 @@ if page == "📊 Model Comparison":
     with col3:
         st.markdown("##### *Transformer*")
         st.markdown("""
-        - Number of encoder/decoder layers: 3  
-        - Number of Attention Heads: 5  
+        - Hidden dimension: 128
+        - Number of encoder layers: 3  
+        - Number of Attention Heads: 8  
         - Feed-forward dimension: 2048  
-        - Dropout: 0.3  
+        - Dropout: 0.1
         """)
 
 
     m2o_metrics = {
         "Model": ["LSTM", "GRU", "Transformer"],
-        "Training Time (s)": [30.386, 25.116, 75.155], 
-        "Train Score (MSE)": [0.1206, 0.0714, 0.1066],
-        "Test Score (MSE)": [0.7709, 0.7002, 0.622]
+        "Training Time (s)": [30.386, 25.116, 363.03], 
+        "Train Score (MSE)": [0.1206, 0.0714, 0.4138],
+        "Test Score (MSE)": [0.7709, 0.7002, 0.707]
     }
 
     m2m_metrics = {
         "Model": ["LSTM", "GRU", "Transformer"],
-        "Training Time (s)": [57.7, 44.5, 196.3], 
-        "Train Score (MSE)": [0.0469, 0.0882, 0.0451],
-        "Test Score (MSE)": [0.93975, 1.0225, 0.5546]
+        "Training Time (s)": [57.7, 44.5, 335.9], 
+        "Train Score (MSE)": [0.0469, 0.0882, 0.3819],
+        "Test Score (MSE)": [0.93975, 1.0225, 0.6387]
     }
 
     df_m2o = pd.DataFrame(m2o_metrics)
