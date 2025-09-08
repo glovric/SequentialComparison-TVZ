@@ -1,4 +1,5 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -6,11 +7,11 @@ COPY streamlit/ streamlit/
 COPY utils/ utils/
 COPY models/ models/
 COPY scalers/ scalers/
-COPY requirements.txt .
+COPY pyproject.toml .
+COPY uv.lock .
 
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv sync --locked
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "streamlit/app.py"]
+CMD ["uv", "run", "streamlit", "run", "streamlit/app.py"]
