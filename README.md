@@ -12,7 +12,6 @@ The app can be found at the following link:
 
 ```python 
 uv sync
-uv pip install torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 If you would like to use PyTorch with CUDA (adjust CUDA version if needed):
