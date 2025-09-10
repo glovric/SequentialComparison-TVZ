@@ -336,9 +336,9 @@ def load_transformer_model(predict_sequence: bool = False) -> TransformerModel:
     """
     n_features = 10
     num_layers = 3
-    num_heads = 8
+    num_heads = 32
     dropout = 0.1
-    d_model = 128
+    d_model = 512
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if not predict_sequence:
@@ -348,7 +348,7 @@ def load_transformer_model(predict_sequence: bool = False) -> TransformerModel:
                                              d_model=d_model,
                                              dropout=dropout, 
                                              num_layers=num_layers)
-        transformer_model.load_state_dict(torch.load("models/transformer_m2o_27-08-2025.pth", map_location=device))
+        transformer_model.load_state_dict(torch.load("models/transformer_m2o_10-09-2025.pth", map_location=device))
 
     else:
         transformer_model = TransformerModel(input_dim=n_features, 
@@ -357,7 +357,7 @@ def load_transformer_model(predict_sequence: bool = False) -> TransformerModel:
                                              nhead=num_heads, 
                                              dropout=dropout, 
                                              num_layers=num_layers)
-        transformer_model.load_state_dict(torch.load("models/transformer_m2m_27-08-2025.pth", map_location=device))
+        transformer_model.load_state_dict(torch.load("models/transformer_m2m_10-09-2025.pth", map_location=device))
 
     transformer_model = transformer_model.to(device)
     return transformer_model
