@@ -87,13 +87,13 @@ class GRUModel(nn.Module):
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
         super(PositionalEncoding, self).__init__()
-        self.positional_embeddings = nn.Embedding(max_len, d_model)  # Learnable embeddings for each position
+        self.positional_embeddings = nn.Embedding(max_len, d_model)
 
     def forward(self, x):
         batch_size, seq_len, _ = x.size()
-        positions = torch.arange(0, seq_len, dtype=torch.long, device=x.device)  # (seq_len,)
-        positional_encoding = self.positional_embeddings(positions)  # (seq_len, d_model)
-        positional_encoding = positional_encoding.unsqueeze(0)  # (1, seq_len, d_model)
+        positions = torch.arange(0, seq_len, dtype=torch.long, device=x.device)
+        positional_encoding = self.positional_embeddings(positions)
+        positional_encoding = positional_encoding.unsqueeze(0)
         return x + positional_encoding
 
 class TransformerModel(nn.Module):
@@ -104,7 +104,7 @@ class TransformerModel(nn.Module):
 
         self.input_proj = nn.Sequential(
                             nn.Linear(input_dim, d_model),
-                            nn.ReLU(),  # or GELU
+                            nn.ReLU(),
                             nn.Linear(d_model, d_model)
                         )
 
