@@ -218,11 +218,13 @@ def render_data_summary(df: pd.DataFrame) -> None:
 def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_train_seq: torch.Tensor, y_train_seq: torch.Tensor, basic_features: list[str], derived_features: list[str]) -> None:
 
     scaler = joblib.load('scalers/standard_scaler.save')
+    model.eval()
 
-    if isinstance(model, TransformerModel):
-        y_pred = model(X_train_seq).squeeze(1).cpu().detach().numpy()
-    else:
-        y_pred = model(X_train_seq).cpu().detach().numpy()
+    with torch.no_grad():
+        if isinstance(model, TransformerModel):
+            y_pred = model(X_train_seq).squeeze(1).cpu().detach().numpy()
+        else:
+            y_pred = model(X_train_seq).cpu().detach().numpy()
 
     y_true = scaler.inverse_transform(y_train_seq.cpu().detach().numpy())
     y_pred = scaler.inverse_transform(y_pred)
@@ -317,6 +319,7 @@ def render_model_train(df: pd.DataFrame, model: LSTMModel | GRUModel | Transform
 def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
     scaler = joblib.load('scalers/standard_scaler.save')
+    model.eval()
 
     col1, col2, col3 = st.columns([2, 2, 2])
 
@@ -364,10 +367,11 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
 
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int)
 
-        if isinstance(model, TransformerModel):
-            y_pred = model(X_test_seq).squeeze(1).cpu().detach().numpy()
-        else:
-            y_pred = model(X_test_seq).cpu().detach().numpy()
+        with torch.no_grad():
+            if isinstance(model, TransformerModel):
+                y_pred = model(X_test_seq).squeeze(1).cpu().detach().numpy()
+            else:
+                y_pred = model(X_test_seq).cpu().detach().numpy()
 
         y_true = scaler.inverse_transform(y_test_seq.cpu().detach().numpy())
         y_pred = scaler.inverse_transform(y_pred)
@@ -416,25 +420,9 @@ def render_model_test(df: pd.DataFrame, model: LSTMModel | GRUModel | Transforme
 
 def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_train_seq: torch.Tensor, y_train_seq: torch.Tensor, basic_features: list[str], derived_features: list[str]) -> None:
     scaler = joblib.load('scalers/standard_scaler.save')
+    model.eval()
+
     col1, col2, col3 = st.columns([2, 2, 2])
-    
-    # Ensure rand_idx persists
-    if 'rand_idx_train' not in st.session_state:
-        st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
-
-    rand_idx = st.session_state.rand_idx_train
-
-    x = X_train_seq[rand_idx].cpu().detach().numpy()
-    y_true = y_train_seq[rand_idx].cpu().detach().numpy()
-
-    if isinstance(model, TransformerModel):
-        y_pred = model(X_train_seq[rand_idx].unsqueeze(1)).squeeze(1).cpu().detach().numpy()
-    else:
-        y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
-
-    x = scaler.inverse_transform(x)
-    y_true = scaler.inverse_transform(y_true)
-    y_pred = scaler.inverse_transform(y_pred)
 
     with col1:
         basic_selected_line = st.multiselect(
@@ -476,6 +464,25 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
 
         if st.button("Load new random train sequence", key="button_rand_train"):
             st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
+        
+        # Ensure rand_idx persists
+        if 'rand_idx_train' not in st.session_state:
+            st.session_state.rand_idx_train = np.random.randint(0, len(X_train_seq))
+
+        rand_idx = st.session_state.rand_idx_train
+
+        x = X_train_seq[rand_idx].cpu().detach().numpy()
+        y_true = y_train_seq[rand_idx].cpu().detach().numpy()
+
+        with torch.no_grad():
+            if isinstance(model, TransformerModel):
+                y_pred = model(X_train_seq[rand_idx].unsqueeze(1)).squeeze(1).cpu().detach().numpy()
+            else:
+                y_pred = model(X_train_seq[rand_idx]).cpu().detach().numpy()
+
+        x = scaler.inverse_transform(x)
+        y_true = scaler.inverse_transform(y_true)
+        y_pred = scaler.inverse_transform(y_pred)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -544,6 +551,8 @@ def render_model_train_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | 
 def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | TransformerModel, X_test_scaled: np.ndarray, basic_features: list[str], derived_features: list[str]) -> None:
     
     scaler = joblib.load('scalers/standard_scaler.save')
+    model.eval()
+
     col1, col2, col3 = st.columns([2, 2, 3])
 
     with col1:
@@ -589,28 +598,6 @@ def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | T
             
         X_test_seq, y_test_seq = load_custom_test_data(X_test_scaled, input_seq_len=num_int, target_seq_len=num_int)
 
-        # Ensure rand_idx persists
-        if 'rand_idx_test' not in st.session_state:
-            st.session_state.rand_idx_test = 0
-
-        if st.session_state.rand_idx_test >= len(X_test_seq):
-            st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq)) if len(X_test_seq) > 0 else 0
-
-        rand_idx = st.session_state.rand_idx_test
-
-        x = X_test_seq[rand_idx].cpu().detach().numpy()
-        y_true = y_test_seq[rand_idx].cpu().detach().numpy()
-        
-        if isinstance(model, TransformerModel):
-            y_pred = model(X_test_seq[rand_idx].unsqueeze(1)).cpu().detach().numpy()
-        else:
-            y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
-
-        x = scaler.inverse_transform(x)
-        y_true = scaler.inverse_transform(y_true)
-        y_pred = scaler.inverse_transform(y_pred)
-        
-
         if st.button("Load new random test sequence", key="button_rand_test"):
             if len(X_test_seq) > 0:
                 st.session_state.rand_idx_test = np.random.randint(0, len(X_test_seq))
@@ -618,6 +605,29 @@ def render_model_test_multiple(df: pd.DataFrame, model: LSTMModel | GRUModel | T
                 st.session_state.rand_idx_test = 0
 
             rand_idx = st.session_state.rand_idx_test
+
+        # Ensure rand_idx persists
+        if 'rand_idx_test' not in st.session_state:
+            st.session_state.rand_idx_test = 0
+
+        rand_idx = st.session_state.rand_idx_test
+
+        if rand_idx >= len(X_test_seq):
+            rand_idx = 0
+            st.session_state.rand_idx_test = 0
+
+        x = X_test_seq[rand_idx].cpu().detach().numpy()
+        y_true = y_test_seq[rand_idx].cpu().detach().numpy()
+        
+        with torch.no_grad():
+            if isinstance(model, TransformerModel):
+                y_pred = model(X_test_seq[rand_idx].unsqueeze(1)).cpu().detach().numpy()
+            else:
+                y_pred = model(X_test_seq[rand_idx]).cpu().detach().numpy()
+
+        x = scaler.inverse_transform(x)
+        y_true = scaler.inverse_transform(y_true)
+        y_pred = scaler.inverse_transform(y_pred)
 
         line_cols = st.columns(num_columns)
 
