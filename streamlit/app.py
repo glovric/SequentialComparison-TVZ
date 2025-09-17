@@ -189,15 +189,15 @@ if page == "📊 Model Comparison":
     m2o_metrics = {
         "Model": ["LSTM", "GRU", "Transformer"],
         "Training Time (s)": [30.386, 25.116, 282.3], 
-        "Train Score (MSE)": [0.1206, 0.0714, 0.2050],
-        "Test Score (MSE)": [0.7709, 0.7002, 0.5257]
+        "Train Score (MSE)": [0.1206, 0.0714, 0.0377],
+        "Test Score (MSE)": [0.7709, 0.7002, 0.6043]
     }
 
     m2m_metrics = {
         "Model": ["LSTM", "GRU", "Transformer"],
         "Training Time (s)": [57.7, 44.5, 335.9], 
-        "Train Score (MSE)": [0.0469, 0.0882, 0.2017],
-        "Test Score (MSE)": [0.93975, 1.0225, 0.4984]
+        "Train Score (MSE)": [0.0469, 0.0882, 0.2050],
+        "Test Score (MSE)": [0.93975, 1.0225, 0.5257]
     }
 
     df_m2o = pd.DataFrame(m2o_metrics)
