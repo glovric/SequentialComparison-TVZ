@@ -265,7 +265,7 @@ def load_lstm_model(predict_sequence: bool = False) -> LSTMModel:
                             num_layers=num_layers, 
                             dropout=dropout, 
                             predict_sequence=predict_sequence)
-        lstm_model.load_state_dict(torch.load("models/lstm_m2o_16-05-2025.pth", map_location=device))
+        lstm_model.load_state_dict(torch.load("models/lstm_m2o_20-09-2025.pth", map_location=device))
 
     else:
         dropout = 0.1
@@ -275,7 +275,7 @@ def load_lstm_model(predict_sequence: bool = False) -> LSTMModel:
                         num_layers=num_layers, 
                         dropout=dropout, 
                         predict_sequence=predict_sequence)
-        lstm_model.load_state_dict(torch.load("models/lstm_m2m_16-05-2025.pth", map_location=device))
+        lstm_model.load_state_dict(torch.load("models/lstm_m2m_20-09-2025.pth", map_location=device))
 
     lstm_model = lstm_model.to(device)
     return lstm_model
@@ -306,7 +306,7 @@ def load_gru_model(predict_sequence: bool = False) -> GRUModel:
                             num_layers=num_layers, 
                             dropout=dropout, 
                             predict_sequence=predict_sequence)
-        gru_model.load_state_dict(torch.load("models/gru_m2o_22-05-2025.pth", map_location=device))
+        gru_model.load_state_dict(torch.load("models/gru_m2o_20-09-2025.pth", map_location=device))
 
     else:
         dropout = 0.1
@@ -316,7 +316,7 @@ def load_gru_model(predict_sequence: bool = False) -> GRUModel:
                         num_layers=num_layers, 
                         dropout=dropout, 
                         predict_sequence=predict_sequence)
-        gru_model.load_state_dict(torch.load("models/gru_m2m_22-05-2025.pth", map_location=device))
+        gru_model.load_state_dict(torch.load("models/gru_m2m_20-09-2025.pth", map_location=device))
 
     gru_model = gru_model.to(device)
     return gru_model
